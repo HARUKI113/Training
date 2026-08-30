@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#111827">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>
+      Training Dashboard
+    </title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer>
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div>
+          <div class="eyebrow">
+            PERSONAL TRAINING
+          </div>
+          <h1>
+            Training Dashboard
+          </h1>
+        </div>
+        <button id="theme" class="icon" aria-label="テーマを切り替える">
+          ◐
+        </button>
+      </header>
+
+      <section class="view active" data-view="home">
+        <div class="hero">
+          <div>
+            <div id="heroDate" class="eyebrow">
+            </div>
+            <h2 id="heroTitle">
+              TODAY
+            </h2>
+            <p id="heroSub" class="muted">
+            </p>
+          </div>
+          <button class="btn primary" id="heroAction">
+            記録を開く
+          </button>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="label">
+              体重
+            </span>
+            <strong id="dWeight">
+              —
+            </strong>
+            <small id="dWeightS">
+              記録なし
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              今日のProtein
+            </span>
+            <strong id="dProtein">
+              0 g
+            </strong>
+            <small id="dProteinS">
+              目標 110 g
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              今週の筋トレ
+            </span>
+            <strong id="dWork">
+              0 回
+            </strong>
+            <small>
+              月〜日
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              今週のRUN
+            </span>
+            <strong id="dRun">
+              0 km
+            </strong>
+            <small id="dRunS">
+              0 回
+            </small>
+          </div>
+        </div>
+        <div class="card">
+          <div class="head">
+            <div>
+              <div class="eyebrow">
+                TODAY SCORE
+              </div>
+              <h3>
+                今日の進捗
+              </h3>
+            </div>
+            <span id="score" class="badge">
+              0 / 4
+            </span>
+          </div>
+          <div id="daily" class="list">
+          </div>
+        </div>
+        <div class="card">
+          <div class="head">
+            <h3>
+              体重の推移
+            </h3>
+            <span id="avgBadge" class="badge">
+              7日平均 —
+            </span>
+          </div>
+          <div id="homeChart" class="chart">
+            2件以上記録すると表示
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="workout">
+        <div>
+          <div class="eyebrow">
+            WORKOUT
+          </div>
+          <h2>
+            筋トレ
+          </h2>
+          <p class="muted">
+            ランニングとストレッチは筋トレ種目から分離しました．
+          </p>
+        </div>
+        <div class="card">
+          <div class="head">
+            <div>
+              <h3 id="wpName">
+              </h3>
+              <p id="wpSub" class="muted">
+              </p>
+            </div>
+            <input id="wpDate" type="date" class="compact-date">
+          </div>
+          <div id="workoutRunNotice" class="notice" hidden>
+          </div>
+          <div id="workoutForm">
+            <div class="session-meta">
+              <label>
+                運動時間 分
+                <input id="wMin" type="number" min="0">
+              </label>
+              <label>
+                Apple Watch アクティブkcal
+                <input id="wKcal" type="number" min="0">
+              </label>
+              <label>
+                総消費kcal 任意
+                <input id="wTotalKcal" type="number" min="0">
+              </label>
+              <label>
+                ストレッチ 分
+                <input id="wStretch" type="number" min="0">
+              </label>
+            </div>
+            <div id="exList">
+            </div>
+            <div class="actions">
+              <button id="saveWo" class="btn primary">
+                今日の記録を保存
+              </button>
+              <button id="clearWo" class="btn secondary">
+                入力をクリア
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="head">
+            <h3>
+              最近の筋トレ
+            </h3>
+          </div>
+          <div id="woHistory" class="list">
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="body">
+        <div>
+          <div class="eyebrow">
+            BODY
+          </div>
+          <h2>
+            体組成
+          </h2>
+          <p class="muted">
+            入浴前・入浴後の両方を保存できます．グラフは設定した基準条件だけを使います．
+          </p>
+        </div>
+        <div class="card">
+          <div class="grid">
+            <label>
+              日付
+              <input id="bDate" type="date">
+            </label>
+            <label>
+              測定条件
+              <select id="bTiming">
+                <option value="morning">
+                  朝・起床後
+                </option>
+                <option value="prebath" selected>
+                  入浴前
+                </option>
+                <option value="postbath">
+                  入浴後
+                </option>
+                <option value="other">
+                  その他
+                </option>
+              </select>
+            </label>
+            <label>
+              身長 cm
+              <input id="bHeight" type="number" step="0.1">
+            </label>
+            <label>
+              体重 kg
+              <input id="bWeight" type="number" step="0.1">
+            </label>
+            <label>
+              BMI
+              <div id="bBmi" class="bmi">
+                —
+              </div>
+            </label>
+            <label>
+              体脂肪率 %
+              <input id="bFat" type="number" step="0.1">
+            </label>
+            <label>
+              筋肉量 kg
+              <input id="bMuscle" type="number" step="0.1">
+            </label>
+            <label>
+              内臓脂肪レベル
+              <input id="bVisceral" type="number" step="0.5">
+            </label>
+            <label>
+              基礎代謝 kcal/日
+              <input id="bBmr" type="number">
+            </label>
+            <label>
+              体内年齢
+              <input id="bAge" type="number">
+            </label>
+          </div>
+          <div class="actions">
+            <button id="saveBody" class="btn primary">
+              保存
+            </button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="label">
+              最新体重
+            </span>
+            <strong id="blw">
+              —
+            </strong>
+            <small id="bld">
+              —
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              7日平均
+            </span>
+            <strong id="bavg">
+              —
+            </strong>
+            <small id="bavgS">
+              基準条件のみ
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              体脂肪率
+            </span>
+            <strong id="blf">
+              —
+            </strong>
+            <small>
+              参考値
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              筋肉量
+            </span>
+            <strong id="blm">
+              —
+            </strong>
+            <small>
+              長期傾向
+            </small>
+          </div>
+        </div>
+        <div class="card">
+          <div id="bodyChart" class="chart">
+            2件以上記録すると表示
+          </div>
+        </div>
+        <div class="card">
+          <div class="table">
+            <table>
+              <thead>
+                <tr>
+                  <th>
+                    日付
+                  </th>
+                  <th>
+                    条件
+                  </th>
+                  <th>
+                    体重
+                  </th>
+                  <th>
+                    BMI
+                  </th>
+                  <th>
+                    体脂肪
+                  </th>
+                  <th>
+                    筋肉量
+                  </th>
+                  <th>
+                    内臓脂肪
+                  </th>
+                  <th>
+                    基礎代謝
+                  </th>
+                  <th>
+                    体内年齢
+                  </th>
+                  <th>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="bodyRows">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="run">
+        <div>
+          <div class="eyebrow">
+            RUNNING
+          </div>
+          <h2>
+            ランニング
+          </h2>
+          <p class="muted">
+            ランニングには重量・回数は使わず，Apple Watchで確認できる内容を中心に記録します．
+          </p>
+        </div>
+        <div class="card">
+          <div class="grid">
+            <label>
+              日付
+              <input id="rDate" type="date">
+            </label>
+            <label>
+              距離 km
+              <input id="rKm" type="number" step="0.01">
+            </label>
+            <label>
+              分
+              <input id="rMin" type="number">
+            </label>
+            <label>
+              秒
+              <input id="rSec" type="number" min="0" max="59">
+            </label>
+            <label>
+              アクティブkcal
+              <input id="rKcal" type="number" min="0">
+            </label>
+            <label>
+              総消費kcal 任意
+              <input id="rTotalKcal" type="number" min="0">
+            </label>
+            <label>
+              平均心拍 任意
+              <input id="rHr" type="number" min="0">
+            </label>
+            <label>
+              ストレッチ 分
+              <input id="rStretch" type="number" min="0">
+            </label>
+            <label>
+              体感
+              <select id="rEff">
+                <option>
+                  Easy
+                </option>
+                <option>
+                  Steady
+                </option>
+                <option>
+                  Hard
+                </option>
+              </select>
+            </label>
+          </div>
+          <div class="actions">
+            <button id="saveRun" class="btn primary">
+              保存
+            </button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="label">
+              今月
+            </span>
+            <strong id="mKm">
+              0 km
+            </strong>
+            <small id="mRuns">
+              0 runs
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              最近のペース
+            </span>
+            <strong id="pace">
+              —
+            </strong>
+            <small>
+              min/km
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              最長距離
+            </span>
+            <strong id="long">
+              —
+            </strong>
+            <small>
+              km
+            </small>
+          </div>
+          <div class="stat">
+            <span class="label">
+              今週
+            </span>
+            <strong id="wKm">
+              0 km
+            </strong>
+            <small>
+              月〜日
+            </small>
+          </div>
+        </div>
+        <div class="card">
+          <div class="head">
+            <h3>
+              ラン履歴
+            </h3>
+          </div>
+          <div id="runHistory" class="list">
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="food">
+        <div>
+          <div class="eyebrow">
+            FOOD &amp; PROTEIN
+          </div>
+          <h2>
+            食事・Protein
+          </h2>
+          <p class="muted">
+            ＋で追加，−で直前の同じ食品を取り消せます．
+          </p>
+        </div>
+        <div class="card">
+          <span class="label">
+            今日のProtein
+          </span>
+          <strong id="pTotal" class="protein-total">
+            0 g
+          </strong>
+          <div class="progress">
+            <div id="pBar">
+            </div>
+          </div>
+          <small id="pRemain" class="muted">
+          </small>
+        </div>
+        <div class="card">
+          <div class="head">
+            <h3>
+              クイック追加
+            </h3>
+            <input id="fDate" type="date" class="compact-date">
+          </div>
+          <div id="quick" class="quick">
+          </div>
+          <div class="grid custom-food-grid">
+            <label>
+              食品名
+              <input id="cName">
+            </label>
+            <label>
+              タンパク質 g
+              <input id="cGram" type="number">
+            </label>
+          </div>
+          <div class="actions">
+            <button id="addP" class="btn secondary">
+              自由入力を追加
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="head">
+            <h3>
+              食事チェック
+            </h3>
+          </div>
+          <div id="meal" class="list">
+          </div>
+        </div>
+        <div class="card">
+          <div class="head">
+            <h3>
+              追加履歴
+            </h3>
+          </div>
+          <div id="pHistory" class="list">
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="cal">
+        <div>
+          <div class="eyebrow">
+            CALENDAR
+          </div>
+          <h2>
+            カレンダー
+          </h2>
+        </div>
+        <div class="card">
+          <div class="calhead">
+            <button id="prevM" class="icon" aria-label="前の月">
+              ‹
+            </button>
+            <h3 id="calTitle">
+            </h3>
+            <button id="nextM" class="icon" aria-label="次の月">
+              ›
+            </button>
+          </div>
+          <div class="calgrid calendar-weekdays">
+            <span class="wd">
+              月
+            </span>
+            <span class="wd">
+              火
+            </span>
+            <span class="wd">
+              水
+            </span>
+            <span class="wd">
+              木
+            </span>
+            <span class="wd">
+              金
+            </span>
+            <span class="wd">
+              土
+            </span>
+            <span class="wd">
+              日
+            </span>
+          </div>
+          <div id="cal" class="calgrid">
+          </div>
+          <p class="muted calendar-legend">
+            <span class="dot w legend-dot">
+            </span>
+            筋トレ
+            <span class="dot r legend-dot">
+            </span>
+            ラン
+            <span class="dot f legend-dot">
+            </span>
+            食事
+            <span class="dot s legend-dot">
+            </span>
+            ストレッチ
+          </p>
+        </div>
+      </section>
+
+      <section class="view" data-view="set">
+        <div>
+          <div class="eyebrow">
+            SETTINGS
+          </div>
+          <h2>
+            設定
+          </h2>
+        </div>
+        <div class="card">
+          <div class="grid">
+            <label>
+              Protein目標 g/日
+              <input id="setGoal" type="number" step="5">
+            </label>
+            <label>
+              身長 cm
+              <input id="setHeight" type="number" step="0.1">
+            </label>
+            <label>
+              体組成の基準条件
+              <select id="setBodyTiming">
+                <option value="morning">
+                  朝・起床後
+                </option>
+                <option value="prebath">
+                  入浴前
+                </option>
+                <option value="postbath">
+                  入浴後
+                </option>
+              </select>
+            </label>
+            <label>
+              表示名
+              <input id="setName">
+            </label>
+          </div>
+          <div class="actions">
+            <button id="saveSet" class="btn primary">
+              保存
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>
+            iCloud Driveで共有
+          </h3>
+          <p class="muted">
+            iPhoneでJSONを書き出してiCloud Driveへ保存し，Macで読み込む運用です．逆方向も同じです．個人データはGitHubには保存しません．
+          </p>
+          <div class="actions">
+            <button id="export" class="btn primary">
+              JSONを書き出す
+            </button>
+            <label class="btn secondary">
+              JSONを読み込む
+              <input id="import" type="file" accept="application/json" hidden>
+            </label>
+          </div>
+        </div>
+        <div class="card">
+          <button id="clearAll" class="btn danger">
+            この端末の全記録を削除
+          </button>
+        </div>
+      </section>
+
+      <nav class="nav">
+        <button data-go="home" class="active">
+          ⌂
+          <small>
+            Home
+          </small>
+        </button>
+        <button data-go="workout">
+          ◫
+          <small>
+            Workout
+          </small>
+        </button>
+        <button data-go="body">
+          ◉
+          <small>
+            Body
+          </small>
+        </button>
+        <button data-go="run">
+          ↗
+          <small>
+            Run
+          </small>
+        </button>
+        <button data-go="food">
+          ＋
+          <small>
+            Food
+          </small>
+        </button>
+        <button data-go="cal">
+          ▦
+          <small>
+            Calendar
+          </small>
+        </button>
+        <button data-go="set">
+          ⚙
+          <small>
+            Settings
+          </small>
+        </button>
+      </nav>
+    </div>
+    <div id="toast" class="toast">
+    </div>
+  </body>
+</html>
