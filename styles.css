@@ -190,6 +190,8 @@ h3 {
 }
 input,select {
   width:100%;
+  min-width:0;
+  max-width:100%;
   margin-top:5px;
   padding:11px 12px;
   border:1px solid var(--line);
@@ -555,4 +557,70 @@ th {
 .exercise-plan,
 .calendar-day-number {
   font-size: 11px;
+}
+
+/* Keep long Japanese labels and form controls inside their grid cells. */
+.card,
+.hero,
+.stat,
+.grid label,
+.session-meta label {
+  min-width: 0;
+}
+
+.grid label,
+.session-meta label {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.body-form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.body-form-grid label {
+  line-height: 1.45;
+}
+
+@media (min-width: 600px) {
+  .body-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .app {
+    max-width: 1160px;
+  }
+
+  .view,
+  .top {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .body-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .view,
+  .top {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  .body-form-grid,
+  .session-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sets {
+    grid-template-columns: 64px repeat(3, minmax(0, 1fr));
+  }
 }
