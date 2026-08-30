@@ -130,7 +130,7 @@
             筋トレ
           </h2>
           <p class="muted">
-            ランニングとストレッチは筋トレ種目から分離しました．
+            ランニングとストレッチは筋トレ種目から分離しています．Apple Watchの記録も入力できます．
           </p>
         </div>
         <div class="card">
@@ -160,6 +160,10 @@
                 <input id="wTotalKcal" type="number" min="0">
               </label>
               <label>
+                Apple Watch 平均心拍 bpm 任意
+                <input id="wHr" type="number" min="0">
+              </label>
+              <label>
                 ストレッチ 分
                 <input id="wStretch" type="number" min="0">
               </label>
@@ -174,6 +178,11 @@
                 入力をクリア
               </button>
             </div>
+          </div>
+          <div class="actions workout-links">
+            <button data-go="run" class="btn secondary">
+              RUNNINGを記録する
+            </button>
           </div>
         </div>
         <div class="card">
@@ -366,11 +375,11 @@
             ランニング
           </h2>
           <p class="muted">
-            ランニングには重量・回数は使わず，Apple Watchで確認できる内容を中心に記録します．
+            Apple Watchのフィットネスに表示される時間・距離・カロリー・心拍数・上昇量を記録できます．
           </p>
         </div>
         <div class="card">
-          <div class="grid">
+          <div class="grid run-form-grid">
             <label>
               日付
               <input id="rDate" type="date">
@@ -398,6 +407,14 @@
             <label>
               平均心拍 任意
               <input id="rHr" type="number" min="0">
+            </label>
+            <label>
+              最大心拍 任意
+              <input id="rMaxHr" type="number" min="0">
+            </label>
+            <label>
+              上昇量 m 任意
+              <input id="rElevation" type="number" min="0" step="0.1">
             </label>
             <label>
               ストレッチ 分
@@ -490,7 +507,7 @@
             食事・Protein
           </h2>
           <p class="muted">
-            ＋で追加，−で直前の同じ食品を取り消せます．
+            ＋でProteinを追加できます．朝昼晩の食事をチェックすると，食べたものも選択できます．
           </p>
         </div>
         <div class="card">

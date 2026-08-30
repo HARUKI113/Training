@@ -224,6 +224,13 @@ input,select {
   color:var(--muted);
   margin-top:3px
 }
+.item > div {
+  min-width:0
+}
+.item b,
+.item small {
+  overflow-wrap:anywhere
+}
 .check {
   display:flex;
   justify-content:space-between;
@@ -241,6 +248,43 @@ input,select {
 .check input {
   width:18px;
   height:18px;
+  margin:0
+}
+.meal-entry {
+  display:grid;
+  gap:8px
+}
+.meal-foods {
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--bg)
+}
+.meal-foods > .label {
+  display:block;
+  margin-bottom:8px
+}
+.food-options {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px
+}
+.food-option {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--text);
+  font-size:12px;
+  font-weight:600
+}
+.food-option input {
+  flex:0 0 17px;
+  width:17px;
+  height:17px;
   margin:0
 }
 .progress {
@@ -578,12 +622,20 @@ th {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.run-form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .body-form-grid label {
   line-height: 1.45;
 }
 
 @media (min-width: 600px) {
   .body-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .run-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -602,6 +654,10 @@ th {
   .body-form-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .run-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 430px) {
@@ -616,6 +672,7 @@ th {
   }
 
   .body-form-grid,
+  .run-form-grid,
   .session-meta {
     grid-template-columns: minmax(0, 1fr);
   }

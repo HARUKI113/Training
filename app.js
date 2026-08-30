@@ -17,7 +17,9 @@ const PLAN= {
   }
 };
 const FOODS=[["プロテイン",22],["納豆",8],["卵",6],["鮭",18],["鶏肉",25],["サラダチキン",23],["牛乳",7],["ヨーグルト",10]];
-const MEALS=[["breakfast","朝にタンパク質"],["lunch","昼にタンパク質"],["pre","筋トレ前の軽食"],["dinner","夜に主菜"],["juice","ジュースなし"],["snack","お菓子・夜食を控えた"]];
+const MEALS=[["breakfast","朝ごはんを食べた"],["lunch","昼ごはんを食べた"],["pre","筋トレ前の軽食"],["dinner","晩ごはんを食べた"],["juice","ジュースなし"],["snack","お菓子・夜食を控えた"]];
+const MEAL_FOODS=["ごはん","パン","卵","納豆","味噌汁","おにぎり","ヨーグルト","果物","プロテイン","肉・魚","野菜"];
+const MAIN_MEALS=["breakfast","lunch","dinner"];
 const TIMING= {
   morning:"朝・起床後",prebath:"入浴前",postbath:"入浴後",other:"その他"
 };
@@ -83,6 +85,10 @@ $('#theme').onclick=()=> {
 function pTotal(d) {
   return(D.protein[d]||[]).reduce((s,x)=>s+Number(x.g),0)
 }
+function mealCount(d) {
+  let m=D.meal[d]||{};
+  return MEALS.filter(x=>m[x[0]]).length
+}
 function bmi(w,h=D.set.height) {
   w=Number(w);
   h=Number(h)/100;
@@ -135,9 +141,8 @@ function renderHome() {
   $('#dWork').textContent=w.length+' 回';
   $('#dRun').textContent=r.reduce((s,x)=>s+Number(x.km),0).toFixed(1)+' km';
   $('#dRunS').textContent=r.length+' 回';
-  let meal=D.meal[t]|| {
-  },stretch=D.wo.some(x=>x.d===t&&+x.stretch>0)||D.run.some(x=>x.d===t&&+x.stretch>0),list=[["tr",p.t==='x'?'休養を守る':p.t==='r'?'ランニングを実施':'筋トレを実施',p.t==='x'?!!(D.daily[t]|| {
-  }).rest:p.t==='r'?D.run.some(x=>x.d===t):D.wo.some(x=>x.d===t)],["pr",'Protein '+D.set.goal+'g',pt>=D.set.goal],["fo",'食事ルールを守る',Object.values(meal).filter(Boolean).length>=4],["rc",'回復・ストレッチを意識',stretch||!!(D.daily[t]|| {
+  let stretch=D.wo.some(x=>x.d===t&&+x.stretch>0)||D.run.some(x=>x.d===t&&+x.stretch>0),list=[["tr",p.t==='x'?'休養を守る':p.t==='r'?'ランニングを実施':'筋トレを実施',p.t==='x'?!!(D.daily[t]|| {
+  }).rest:p.t==='r'?D.run.some(x=>x.d===t):D.wo.some(x=>x.d===t)],["pr",'Protein '+D.set.goal+'g',pt>=D.set.goal],["fo",'食事ルールを守る',mealCount(t)>=4],["rc",'回復・ストレッチを意識',stretch||!!(D.daily[t]|| {
   }).recovery]];
   $('#daily').innerHTML=list.map(x=>`<div class="check"><label><input data-day="${x[0]}" type="checkbox" ${x[2]?'checked':''}>${x[1]}</label><span>${x[2]?'✓':'—'}</span></div>`).join('');
   $$('[data-day]').forEach(c=>c.onchange=()=> {
@@ -167,7 +172,7 @@ function renderWorkout() {
   $('#workoutForm').hidden = !isWorkout;
   $('#workoutRunNotice').hidden = isWorkout;
   $('#workoutRunNotice').innerHTML = plan.t === 'r'
-    ? 'この日はランニング日です．距離・時間・Apple Watchの消費カロリーは <b>Run</b> タブで記録します．ストレッチもRun側の「ストレッチ分」で記録できます．'
+    ? 'この日はランニング日です．距離・時間・Apple Watchの値は <b>RUNNING</b> タブで記録します．ストレッチもRUNNING側で記録できます．'
     : 'この日は休養日です．筋トレ記録は不要です．';
 
   if (isWorkout) {
@@ -213,7 +218,7 @@ function renderWorkout() {
           <div class="item">
             <div>
               <b>${entry.p}</b>
-              <small>${entry.d} ・ ${(entry.e || []).length}種目 ・ ${entry.min || '—'}分 ・ ${entry.kcal || '—'}kcal${entry.stretch ? ` ・ stretch ${entry.stretch}分` : ''}</small>
+              <small>${entry.d} ・ ${(entry.e || []).length}種目 ・ ${entry.min || '—'}分 ・ ${entry.kcal || '—'}kcal${entry.totalKcal ? ` ・ 合計 ${entry.totalKcal}kcal` : ''}${entry.hr ? ` ・ HR ${entry.hr}` : ''}${entry.stretch ? ` ・ stretch ${entry.stretch}分` : ''}</small>
             </div>
             <button class="btn danger" data-dw="${entry.id}">削除</button>
           </div>
@@ -230,7 +235,7 @@ function renderWorkout() {
 }
 $('#wpDate').onchange=renderWorkout;
 $('#clearWo').onclick=()=> {
-  ['#wMin','#wKcal','#wTotalKcal','#wStretch'].forEach(x=>$(x).value='');
+  ['#wMin','#wKcal','#wTotalKcal','#wHr','#wStretch'].forEach(x=>$(x).value='');
   renderWorkout()
 };
 $('#saveWo').onclick=()=> {
@@ -239,11 +244,11 @@ $('#saveWo').onclick=()=> {
   let e=$$('.exercise').map(c=>( {
     n:c.dataset.name,k:c.querySelector('.ew').value,r:[...c.querySelectorAll('.er')].map(x=>x.value)
   })).filter(x=>x.k||x.r.some(Boolean));
-  let min=$('#wMin').value,kcal=$('#wKcal').value,totalKcal=$('#wTotalKcal').value,stretch=$('#wStretch').value;
-  if(!e.length&&!min&&!kcal)return alert('種目記録，運動時間，消費カロリーのどれかを入力してください．');
+  let min=$('#wMin').value,kcal=$('#wKcal').value,totalKcal=$('#wTotalKcal').value,hr=$('#wHr').value,stretch=$('#wStretch').value;
+  if(!e.length&&!min&&!kcal&&!totalKcal&&!hr&&!stretch)return alert('種目記録，運動時間，Apple Watchの値のどれかを入力してください．');
   D.wo=D.wo.filter(x=>x.d!==d);
   D.wo.push( {
-    id:crypto.randomUUID(),d,p:p.n,e,min,kcal,totalKcal,stretch
+    id:crypto.randomUUID(),d,p:p.n,e,min,kcal,totalKcal,hr,stretch
   });
   save();
   showToast('筋トレを保存しました．')
@@ -288,10 +293,10 @@ $('#saveRun').onclick=()=> {
   let d=$('#rDate').value,km=+$('#rKm').value,m=+$('#rMin').value||0,s=+$('#rSec').value||0;
   if(!d||!km||(!m&&!s))return alert('日付，距離，時間を入力してください．');
   D.run.push( {
-    id:crypto.randomUUID(),d,km,sec:m*60+s,kcal:$('#rKcal').value,totalKcal:$('#rTotalKcal').value,hr:$('#rHr').value,stretch:$('#rStretch').value,eff:$('#rEff').value
+    id:crypto.randomUUID(),d,km,sec:m*60+s,kcal:$('#rKcal').value,totalKcal:$('#rTotalKcal').value,hr:$('#rHr').value,maxHr:$('#rMaxHr').value,elevation:$('#rElevation').value,stretch:$('#rStretch').value,eff:$('#rEff').value
   });
   save();
-  ['#rKm','#rMin','#rSec','#rKcal','#rTotalKcal','#rHr','#rStretch'].forEach(x=>$(x).value='');
+  ['#rKm','#rMin','#rSec','#rKcal','#rTotalKcal','#rHr','#rMaxHr','#rElevation','#rStretch'].forEach(x=>$(x).value='');
   showToast('ランニングを保存しました．')
 };
 function renderRun() {
@@ -323,7 +328,7 @@ function renderRun() {
           <div class="item">
             <div>
               <b>${entry.km.toFixed(2)} km ・ ${pace(entry)} /km</b>
-              <small>${entry.d} ・ ${entry.eff} ・ ${Math.floor(entry.sec / 60)}分 ・ ${entry.kcal || '—'}kcal${entry.hr ? ` ・ HR ${entry.hr}` : ''}${entry.stretch ? ` ・ stretch ${entry.stretch}分` : ''}</small>
+              <small>${entry.d} ・ ${entry.eff} ・ ${Math.floor(entry.sec / 60)}分 ・ ${entry.kcal || '—'}kcal${entry.totalKcal ? ` ・ 合計 ${entry.totalKcal}kcal` : ''}${entry.hr ? ` ・ 平均HR ${entry.hr}` : ''}${entry.maxHr ? ` ・ 最大HR ${entry.maxHr}` : ''}${entry.elevation ? ` ・ 上昇 ${entry.elevation}m` : ''}${entry.stretch ? ` ・ stretch ${entry.stretch}分` : ''}</small>
             </div>
             <button class="btn danger" data-dr="${entry.id}">削除</button>
           </div>
@@ -376,11 +381,33 @@ function renderFood() {
   $$('[data-plus]').forEach(b=>b.onclick=()=>addP(d,b.dataset.plus,+b.dataset.g));
   $$('[data-minus]').forEach(b=>b.onclick=()=>removeLatestP(d,b.dataset.minus));
   let m=D.meal[d]|| {
+  },mealFoods=m.foods|| {
   };
-  $('#meal').innerHTML=MEALS.map(x=>`<div class="check"><label><input data-meal="${x[0]}" type="checkbox" ${m[x[0]]?'checked':''}>${x[1]}</label><span>${m[x[0]]?'✓':'—'}</span></div>`).join('');
+  $('#meal').innerHTML=MEALS.map(([key,label])=> {
+    let checked=!!m[key],selected=Array.isArray(mealFoods[key])?mealFoods[key]:[];
+    let foodOptions=MEAL_FOODS.map(food=>'<label class="food-option"><input data-meal-food="'+key+'" data-food="'+food+'" type="checkbox" '+(selected.includes(food)?'checked':'')+'>'+food+'</label>').join('');
+    let details=MAIN_MEALS.includes(key)?'<div class="meal-foods" '+(checked?'':'hidden')+'><span class="label">食べたもの（複数選択）</span><div class="food-options">'+foodOptions+'</div></div>':'';
+    return '<div class="meal-entry"><div class="check"><label><input data-meal="'+key+'" type="checkbox" '+(checked?'checked':'')+'>'+label+'</label><span>'+(checked?'✓':'—')+'</span></div>'+details+'</div>'
+  }).join('');
   $$('[data-meal]').forEach(c=>c.onchange=()=> {
     D.meal[d]=D.meal[d]|| {
-    }; D.meal[d][c.dataset.meal]=c.checked; save()
+    };
+    D.meal[d][c.dataset.meal]=c.checked;
+    if(!c.checked&&MAIN_MEALS.includes(c.dataset.meal)) {
+      D.meal[d].foods=D.meal[d].foods|| {
+      };
+      D.meal[d].foods[c.dataset.meal]=[];
+    }
+    save()
+  });
+  $$('[data-meal-food]').forEach(c=>c.onchange=()=> {
+    D.meal[d]=D.meal[d]|| {
+    };
+    D.meal[d].foods=D.meal[d].foods|| {
+    };
+    let key=c.dataset.mealFood,selected=Array.isArray(D.meal[d].foods[key])?D.meal[d].foods[key]:[];
+    D.meal[d].foods[key]=c.checked?[...new Set([...selected,c.dataset.food])]:selected.filter(x=>x!==c.dataset.food);
+    save()
   });
   let h=D.protein[d]||[];
   $('#pHistory').innerHTML=h.length?h.map(x=>`<div class="item"><div><b>${x.n}</b><small>+${x.g} g</small></div><button class="btn danger" data-dp="${x.id}">削除</button></div>`).join(''):'<span class="muted">まだ追加なし</span>';
@@ -402,8 +429,7 @@ function renderCal() {
   for(let i=0; i<42; i++) {
     let d=new Date(s);
     d.setDate(s.getDate()+i);
-    let ds=ymd(d),w=D.wo.some(x=>x.d===ds),r=D.run.some(x=>x.d===ds),food=Object.values(D.meal[ds]|| {
-    }).filter(Boolean).length>=4||pTotal(ds)>=D.set.goal,stretch=D.wo.some(x=>x.d===ds&&+x.stretch>0)||D.run.some(x=>x.d===ds&&+x.stretch>0);
+    let ds=ymd(d),w=D.wo.some(x=>x.d===ds),r=D.run.some(x=>x.d===ds),food=mealCount(ds)>=4||pTotal(ds)>=D.set.goal,stretch=D.wo.some(x=>x.d===ds&&+x.stretch>0)||D.run.some(x=>x.d===ds&&+x.stretch>0);
     out.push(`<div class="day ${d.getMonth()!==m?'out':''} ${ds===today?'today':''}"><b class="calendar-day-number">${d.getDate()}</b><span class="marks">${w?'<i class="dot w"></i>':''}${r?'<i class="dot r"></i>':''}${food?'<i class="dot f"></i>':''}${stretch?'<i class="dot s"></i>':''}</span></div>`)
   }
   $('#cal').innerHTML=out.join('')
