@@ -661,10 +661,71 @@ th {
 }
 
 @media (max-width: 430px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app,
+  .top,
+  .view,
+  .card,
+  .hero,
+  .stats,
+  .grid,
+  .quick,
+  .session-meta {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .view,
   .top {
     padding-left: 14px;
     padding-right: 14px;
+  }
+
+  .top {
+    gap: 10px;
+  }
+
+  .top > div,
+  .hero > div,
+  .head > *,
+  .ex-top > *,
+  .stats > *,
+  .grid > *,
+  .quick > *,
+  .session-meta > * {
+    min-width: 0;
+  }
+
+  .top > div {
+    flex: 1 1 auto;
+  }
+
+  .top #theme {
+    flex: 0 0 42px;
+  }
+
+  .hero .btn,
+  .nav button {
+    min-width: 0;
+  }
+
+  .foodquick > div {
+    min-width: 0;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .card {
@@ -679,5 +740,12 @@ th {
 
   .sets {
     grid-template-columns: 64px repeat(3, minmax(0, 1fr));
+  }
+
+  .nav {
+    right: 0;
+    left: 0;
+    width: 100%;
+    transform: none;
   }
 }
