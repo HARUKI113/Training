@@ -183,20 +183,34 @@ function chartSeries(points,color) {
   return `<path d="${path}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${circles}`
 }
 function chart(el) {
-  let a=[...bodyFiltered()].filter(x=>hasNumber(x.w)).sort((a,b)=>a.d.localeCompare(b.d)).slice(-21);
+  let byDate=new Map();
+  [...bodyFiltered()].filter(x=>hasNumber(x.w)).sort((a,b)=>a.d.localeCompare(b.d)).slice(-21).forEach(x=>byDate.set(x.d,x));
+  let a=[...byDate.values()];
   if(a.length<2) {
     el.classList.remove('has-data');
     el.innerHTML='体重を2件以上記録すると表示';
     return
   }
   el.classList.add('has-data');
-  let W=Math.max(280,Math.round(el.clientWidth||760)),H=250,p=34,kgTop=28,kgBottom=151,fatTop=185,fatBottom=231,xAt=i=>p+(W-p*2)*i/(a.length-1),weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right=hasFat?chartRange(fats,.8):{min:0,max:100},y=(value,range,top,bottom)=>bottom-(bottom-top)*(value-range.min)/(range.max-range.min),weightPoints=a.map((x,i)=>[xAt(i),y(+x.w,left,kgTop,kgBottom)]),musclePoints=a.map((x,i)=>hasNumber(x.m)?[xAt(i),y(+x.m,left,kgTop,kgBottom)]:null),fatPoints=a.map((x,i)=>hasNumber(x.f)?[xAt(i),y(+x.f,right,fatTop,fatBottom)]:null),ticks=[0,.5,1];
+  let firstDate=parse(a[0].d),lastDate=parse(a[a.length-1].d),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(7,spanDays+1),startDate=new Date(firstDate);
+  if(spanDays<6) {
+    startDate=new Date(lastDate);
+    startDate.setDate(startDate.getDate()-(dayCount-1))
+  }
+  let viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,baseDayWidth=64,baseWidth=p*2+(dayCount-1)*baseDayWidth,W=Math.max(viewportWidth,baseWidth),dayWidth=baseWidth<=viewportWidth?(W-p*2)/(dayCount-1):baseDayWidth,H=290,kgTop=28,kgBottom=151,fatTop=185,fatBottom=231,xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right=hasFat?chartRange(fats,.8):{min:0,max:100},y=(value,range,top,bottom)=>bottom-(bottom-top)*(value-range.min)/(range.max-range.min),weightPoints=a.map(x=>[xAtDate(x.d),y(+x.w,left,kgTop,kgBottom)]),musclePoints=a.map(x=>hasNumber(x.m)?[xAtDate(x.d),y(+x.m,left,kgTop,kgBottom)]:null),fatPoints=a.map(x=>hasNumber(x.f)?[xAtDate(x.d),y(+x.f,right,fatTop,fatBottom)]:null),ticks=[0,.5,1];
   let kgGrid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${kgTop+(kgBottom-kgTop)*r}" y2="${kgTop+(kgBottom-kgTop)*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join('');
   let fatGrid=hasFat?ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${fatTop+(fatBottom-fatTop)*r}" y2="${fatTop+(fatBottom-fatTop)*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join(''):'';
   let leftLabels=ticks.map(r=>`<text x="5" y="${kgTop+(kgBottom-kgTop)*r+4}" fill="var(--blue)" opacity=".85" font-size="11">${numberText(left.max-(left.max-left.min)*r)}kg</text>`).join('');
   let rightLabels=hasFat?ticks.map(r=>`<text x="${W-5}" y="${fatTop+(fatBottom-fatTop)*r+4}" text-anchor="end" fill="var(--orange)" opacity=".9" font-size="11">${numberText(right.max-(right.max-right.min)*r)}%</text>`).join(''):`<text x="${W-5}" y="${fatTop+4}" text-anchor="end" fill="var(--orange)" opacity=".8" font-size="11">—</text>`;
-  let fatTitle=`<text x="${p}" y="${fatTop-8}" fill="var(--orange)" opacity=".9" font-size="11">体脂肪率（%）${hasFat?'':' 未記録'}</text>`;
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="体重、筋肉量、体脂肪率の推移"><title>体重、筋肉量、体脂肪率の推移</title>${kgGrid}<line x1="${p}" x2="${W-p}" y1="170" y2="170" stroke="var(--line)" stroke-width="1" opacity=".8"/>${fatGrid}${chartSeries(weightPoints,'var(--blue)')}${chartSeries(musclePoints,'var(--green)')}${chartSeries(fatPoints,'var(--orange)')}${leftLabels}${rightLabels}${fatTitle}</svg><div class="chart-legend"><span class="chart-key"><i class="weight"></i>体重（kg）</span><span class="chart-key"><i class="muscle"></i>筋肉量（kg）</span><span class="chart-key"><i class="fat"></i>体脂肪率（%）</span></div>`
+  let dateLabels=Array.from({length:dayCount},(_,i)=> {
+    let date=new Date(startDate);
+    date.setDate(date.getDate()+i);
+    let label=(date.getMonth()+1)+'/'+date.getDate(),x=p+i*dayWidth;
+    return `<text x="${x}" y="${H-10}" text-anchor="middle" fill="currentColor" opacity=".8" font-size="11">${label}</text>`
+  }).join('');
+  el.innerHTML=`<div class="chart-scroll"><svg style="width:${W}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="体重、筋肉量、体脂肪率の推移"><title>体重、筋肉量、体脂肪率の推移</title>${kgGrid}<line x1="${p}" x2="${W-p}" y1="170" y2="170" stroke="var(--line)" stroke-width="1" opacity=".8"/>${fatGrid}${chartSeries(weightPoints,'var(--blue)')}${chartSeries(musclePoints,'var(--green)')}${chartSeries(fatPoints,'var(--orange)')}${leftLabels}${rightLabels}${dateLabels}</svg></div><div class="chart-legend"><span class="chart-key"><i class="weight"></i>体重（kg）</span><span class="chart-key"><i class="muscle"></i>筋肉量（kg）</span><span class="chart-key"><i class="fat"></i>体脂肪率（%）</span></div>`;
+  let scroller=el.querySelector('.chart-scroll');
+  requestAnimationFrame(()=>scroller.scrollLeft=scroller.scrollWidth)
 }
 function renderHome() {
   let t=ymd(),p=PLAN[new Date().getDay()],n=new Date();
