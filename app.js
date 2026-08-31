@@ -88,7 +88,9 @@ function go(v) {
   $$('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.go===v));
   scrollTo( {
     top:0,behavior:'smooth'
-  })
+  });
+  if(v==='home')renderHome();
+  if(v==='body')renderBody()
 }
 $$('[data-go]').forEach(x=>x.onclick=()=>go(x.dataset.go));
 $('#theme').onclick=()=> {
@@ -188,11 +190,13 @@ function chart(el) {
     return
   }
   el.classList.add('has-data');
-  let W=760,H=228,p=34,plotH=H-p*2,xAt=i=>p+(W-p*2)*i/(a.length-1),weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right=hasFat?chartRange(fats,.8):{min:0,max:100},y=(value,range)=>H-p-(H-p*2)*(value-range.min)/(range.max-range.min),weightPoints=a.map((x,i)=>[xAt(i),y(+x.w,left)]),musclePoints=a.map((x,i)=>hasNumber(x.m)?[xAt(i),y(+x.m,left)]:null),fatPoints=a.map((x,i)=>hasNumber(x.f)?[xAt(i),y(+x.f,right)]:null),ticks=[0,.5,1];
-  let grid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${p+plotH*r}" y2="${p+plotH*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join('');
-  let leftLabels=ticks.map(r=>`<text x="5" y="${p+plotH*r+4}" fill="var(--blue)" opacity=".8" font-size="11">${numberText(left.max-(left.max-left.min)*r)}kg</text>`).join('');
-  let rightLabels=hasFat?ticks.map(r=>`<text x="${W-5}" y="${p+plotH*r+4}" text-anchor="end" fill="var(--orange)" opacity=".9" font-size="11">${numberText(right.max-(right.max-right.min)*r)}%</text>`).join(''):`<text x="${W-5}" y="${p+4}" text-anchor="end" fill="var(--orange)" opacity=".8" font-size="11">体脂肪率 —</text>`;
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="体重、筋肉量、体脂肪率の推移"><title>体重、筋肉量、体脂肪率の推移</title>${grid}${chartSeries(weightPoints,'var(--blue)')}${chartSeries(musclePoints,'var(--green)')}${chartSeries(fatPoints,'var(--orange)')}${leftLabels}${rightLabels}</svg><div class="chart-legend"><span class="chart-key"><i class="weight"></i>体重（kg）</span><span class="chart-key"><i class="muscle"></i>筋肉量（kg）</span><span class="chart-key"><i class="fat"></i>体脂肪率（%）</span></div>`
+  let W=Math.max(280,Math.round(el.clientWidth||760)),H=250,p=34,kgTop=28,kgBottom=151,fatTop=185,fatBottom=231,xAt=i=>p+(W-p*2)*i/(a.length-1),weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right=hasFat?chartRange(fats,.8):{min:0,max:100},y=(value,range,top,bottom)=>bottom-(bottom-top)*(value-range.min)/(range.max-range.min),weightPoints=a.map((x,i)=>[xAt(i),y(+x.w,left,kgTop,kgBottom)]),musclePoints=a.map((x,i)=>hasNumber(x.m)?[xAt(i),y(+x.m,left,kgTop,kgBottom)]:null),fatPoints=a.map((x,i)=>hasNumber(x.f)?[xAt(i),y(+x.f,right,fatTop,fatBottom)]:null),ticks=[0,.5,1];
+  let kgGrid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${kgTop+(kgBottom-kgTop)*r}" y2="${kgTop+(kgBottom-kgTop)*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join('');
+  let fatGrid=hasFat?ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${fatTop+(fatBottom-fatTop)*r}" y2="${fatTop+(fatBottom-fatTop)*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join(''):'';
+  let leftLabels=ticks.map(r=>`<text x="5" y="${kgTop+(kgBottom-kgTop)*r+4}" fill="var(--blue)" opacity=".85" font-size="11">${numberText(left.max-(left.max-left.min)*r)}kg</text>`).join('');
+  let rightLabels=hasFat?ticks.map(r=>`<text x="${W-5}" y="${fatTop+(fatBottom-fatTop)*r+4}" text-anchor="end" fill="var(--orange)" opacity=".9" font-size="11">${numberText(right.max-(right.max-right.min)*r)}%</text>`).join(''):`<text x="${W-5}" y="${fatTop+4}" text-anchor="end" fill="var(--orange)" opacity=".8" font-size="11">—</text>`;
+  let fatTitle=`<text x="${p}" y="${fatTop-8}" fill="var(--orange)" opacity=".9" font-size="11">体脂肪率（%）${hasFat?'':' 未記録'}</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="体重、筋肉量、体脂肪率の推移"><title>体重、筋肉量、体脂肪率の推移</title>${kgGrid}<line x1="${p}" x2="${W-p}" y1="170" y2="170" stroke="var(--line)" stroke-width="1" opacity=".8"/>${fatGrid}${chartSeries(weightPoints,'var(--blue)')}${chartSeries(musclePoints,'var(--green)')}${chartSeries(fatPoints,'var(--orange)')}${leftLabels}${rightLabels}${fatTitle}</svg><div class="chart-legend"><span class="chart-key"><i class="weight"></i>体重（kg）</span><span class="chart-key"><i class="muscle"></i>筋肉量（kg）</span><span class="chart-key"><i class="fat"></i>体脂肪率（%）</span></div>`
 }
 function renderHome() {
   let t=ymd(),p=PLAN[new Date().getDay()],n=new Date();
