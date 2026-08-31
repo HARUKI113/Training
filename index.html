@@ -8,8 +8,8 @@
     <title>
       Training Dashboard
     </title>
-    <link rel="stylesheet" href="styles.css?v=20260831-2">
-    <script src="app.js?v=20260831-2" defer>
+    <link rel="stylesheet" href="styles.css?v=20260831-3">
+    <script src="app.js?v=20260831-3" defer>
     </script>
   </head>
   <body>
@@ -507,21 +507,86 @@
             食事・Protein
           </h2>
           <p class="muted">
-            ＋でProteinを追加できます．朝昼晩の食事をチェックすると，食べたものも選択できます．
+            カロリー・PFC・食物繊維を記録できます．朝昼晩の食事をチェックすると，食べたものも選択できます．
           </p>
         </div>
         <div class="card">
-          <span class="label">
-            今日のProtein
-          </span>
-          <strong id="pTotal" class="protein-total">
-            0 g
-          </strong>
+          <div class="head">
+            <div>
+              <div class="eyebrow">
+                TODAY NUTRITION
+              </div>
+              <h3>
+                今日の栄養
+              </h3>
+            </div>
+            <span class="badge">
+              目安
+            </span>
+          </div>
+          <div class="macro-summary">
+            <div class="macro-stat">
+              <span class="label">
+                カロリー
+              </span>
+              <strong id="calTotal">
+                0 kcal
+              </strong>
+              <small id="calGoal">
+                目標未設定
+              </small>
+            </div>
+            <div class="macro-stat">
+              <span class="label">
+                Protein
+              </span>
+              <strong id="pTotal">
+                0 g
+              </strong>
+              <small id="pRemain">
+                目標 110 g
+              </small>
+            </div>
+            <div class="macro-stat">
+              <span class="label">
+                脂質
+              </span>
+              <strong id="fatTotal">
+                0 g
+              </strong>
+              <small id="fatGoal">
+                目標未設定
+              </small>
+            </div>
+            <div class="macro-stat">
+              <span class="label">
+                炭水化物
+              </span>
+              <strong id="carbTotal">
+                0 g
+              </strong>
+              <small id="carbGoal">
+                目標未設定
+              </small>
+            </div>
+            <div class="macro-stat">
+              <span class="label">
+                食物繊維
+              </span>
+              <strong id="fiberTotal">
+                0 g
+              </strong>
+              <small id="fiberGoal">
+                目標未設定
+              </small>
+            </div>
+          </div>
           <div class="progress">
             <div id="pBar">
             </div>
           </div>
-          <small id="pRemain" class="muted">
+          <small class="muted">
+            食品の栄養値は目安です．量が違う場合は自由入力で調整してください．
           </small>
         </div>
         <div class="card">
@@ -539,8 +604,24 @@
               <input id="cName">
             </label>
             <label>
+              カロリー kcal
+              <input id="cKcal" type="number" min="0">
+            </label>
+            <label>
               タンパク質 g
-              <input id="cGram" type="number">
+              <input id="cGram" type="number" min="0">
+            </label>
+            <label>
+              脂質 g
+              <input id="cFat" type="number" min="0" step="0.1">
+            </label>
+            <label>
+              炭水化物 g
+              <input id="cCarbs" type="number" min="0" step="0.1">
+            </label>
+            <label>
+              食物繊維 g
+              <input id="cFiber" type="number" min="0" step="0.1">
             </label>
           </div>
           <div class="actions">
@@ -645,6 +726,22 @@
             <label>
               Protein目標 g/日
               <input id="setGoal" type="number" step="5">
+            </label>
+            <label>
+              カロリー目標 kcal/日（任意）
+              <input id="setKcalGoal" type="number" min="0" step="50">
+            </label>
+            <label>
+              脂質目標 g/日（任意）
+              <input id="setFatGoal" type="number" min="0" step="1">
+            </label>
+            <label>
+              炭水化物目標 g/日（任意）
+              <input id="setCarbGoal" type="number" min="0" step="5">
+            </label>
+            <label>
+              食物繊維目標 g/日（任意）
+              <input id="setFiberGoal" type="number" min="0" step="1">
             </label>
             <label>
               身長 cm

@@ -16,7 +16,20 @@ const PLAN= {
     n:"EASY RUN",s:"40分イージーラン",t:"r",e:[]
   }
 };
-const FOODS=[["プロテイン",22],["納豆",8],["卵",6],["鮭",18],["鶏肉",25],["サラダチキン",23],["牛乳",7],["ヨーグルト",10]];
+const FOODS=[
+  {n:"ごはん",serving:"150g",kcal:234,p:3.8,f:0.5,c:55.7,fiber:2.3},
+  {n:"食パン",serving:"6枚切り1枚",kcal:160,p:5.6,f:2.6,c:28.0,fiber:1.4},
+  {n:"バナナ",serving:"1本",kcal:86,p:1.1,f:0.2,c:22.5,fiber:1.1},
+  {n:"プロテイン",serving:"1回分",kcal:120,p:22,f:2,c:4,fiber:0},
+  {n:"納豆",serving:"1パック",kcal:100,p:8,f:5,c:5,fiber:3},
+  {n:"卵",serving:"1個",kcal:80,p:6,f:5,c:0.2,fiber:0},
+  {n:"鮭",serving:"1切れ",kcal:180,p:20,f:11,c:0,fiber:0},
+  {n:"鶏肉",serving:"100g",kcal:165,p:25,f:7,c:0,fiber:0},
+  {n:"サラダチキン",serving:"1個",kcal:120,p:23,f:2,c:2,fiber:0},
+  {n:"豆腐",serving:"150g",kcal:84,p:7.4,f:4.5,c:2.4,fiber:0.5},
+  {n:"牛乳",serving:"200ml",kcal:130,p:7,f:8,c:10,fiber:0},
+  {n:"ヨーグルト",serving:"100g",kcal:60,p:3.6,f:3,c:5,fiber:0}
+];
 const MEALS=[["breakfast","朝ごはんを食べた"],["lunch","昼ごはんを食べた"],["pre","筋トレ前の軽食"],["dinner","晩ごはんを食べた"],["juice","ジュースなし"],["snack","お菓子・夜食を控えた"]];
 const MEAL_FOODS=["ごはん","パン","卵","納豆","味噌汁","おにぎり","ヨーグルト","果物","プロテイン","肉・魚","野菜"];
 const MAIN_MEALS=["breakfast","lunch","dinner"];
@@ -26,7 +39,7 @@ const TIMING= {
 function blank() {
   return {
     set: {
-      goal:110,name:"",height:167.2,bodyTiming:"prebath"
+      goal:110,kcalGoal:0,fatGoal:0,carbGoal:0,fiberGoal:0,name:"",height:167.2,bodyTiming:"prebath"
     },body:[],wo:[],run:[],protein: {
     },meal: {
     },daily: {
@@ -82,8 +95,40 @@ $('#theme').onclick=()=> {
   D.set.theme=document.documentElement.classList.contains('dark')?'light':'dark';
   save()
 };
+function hasNumber(value) {
+  return value!==""&&value!==undefined&&value!==null&&Number.isFinite(Number(value))
+}
+function numberText(value) {
+  let n=Number(value);
+  if(!Number.isFinite(n))return "0";
+  return Number.isInteger(n)?String(n):n.toFixed(1).replace(/\.0$/,'')
+}
+function nutritionTotals(d) {
+  let total={kcal:0,protein:0,fat:0,carbs:0,fiber:0};
+  (D.protein[d]||[]).forEach(x=> {
+    total.kcal+=Number(x.kcal)||0;
+    total.protein+=Number(x.g??x.p)||0;
+    total.fat+=Number(x.fat??x.f)||0;
+    total.carbs+=Number(x.carbs??x.c)||0;
+    total.fiber+=Number(x.fiber)||0
+  });
+  return total
+}
+function nutritionText(x) {
+  let out=[];
+  if(hasNumber(x.kcal)&&Number(x.kcal)>0)out.push(numberText(x.kcal)+' kcal');
+  let p=x.g??x.p;
+  if(hasNumber(p))out.push('P '+numberText(p)+'g');
+  if(hasNumber(x.fat??x.f))out.push('F '+numberText(x.fat??x.f)+'g');
+  if(hasNumber(x.carbs??x.c))out.push('C '+numberText(x.carbs??x.c)+'g');
+  if(hasNumber(x.fiber))out.push('食物繊維 '+numberText(x.fiber)+'g');
+  return out.join(' / ')||'栄養値未入力'
+}
+function goalText(goal,unit) {
+  return Number(goal)>0?'目標 '+numberText(goal)+' '+unit:'目標未設定'
+}
 function pTotal(d) {
-  return(D.protein[d]||[]).reduce((s,x)=>s+Number(x.g),0)
+  return nutritionTotals(d).protein
 }
 function mealCount(d) {
   let m=D.meal[d]||{};
@@ -343,9 +388,18 @@ function renderRun() {
     };
   });
 }
-function addP(d,n,g) {
+function nutritionValue(value) {
+  return value===""||value===undefined||value===null?"":Number(value)||0
+}
+function addFood(d,food) {
   let entry= {
-    id:crypto.randomUUID(),n,g
+    id:crypto.randomUUID(),
+    n:food.n||food.name,
+    g:nutritionValue(food.p??food.protein??food.g),
+    kcal:nutritionValue(food.kcal),
+    fat:nutritionValue(food.fat??food.f),
+    carbs:nutritionValue(food.carbs??food.c),
+    fiber:nutritionValue(food.fiber)
   };
   D.protein[d]=D.protein[d]||[];
   D.protein[d].push(entry);
@@ -353,9 +407,12 @@ function addP(d,n,g) {
     d,id:entry.id
   };
   save();
-  showToast(`${n} +${g}g`,()=> {
+  showToast(`${entry.n}を追加しました．`,()=> {
     D.protein[d]=(D.protein[d]||[]).filter(x=>x.id!==entry.id); save()
   })
+}
+function addP(d,n,g) {
+  addFood(d,{n,p:g})
 }
 function removeLatestP(d,n) {
   let a=D.protein[d]||[],idx=-1;
@@ -373,12 +430,20 @@ function removeLatestP(d,n) {
   })
 }
 function renderFood() {
-  let d=$('#fDate').value||ymd(),t=pTotal(d),g=+D.set.goal;
-  $('#pTotal').textContent=t+' g';
-  $('#pBar').style.width=Math.min(100,t/g*100)+'%';
-  $('#pRemain').textContent=t>=g?'目標達成 +'+(t-g)+' g':'あと '+(g-t)+' g';
-  $('#quick').innerHTML=FOODS.map(x=>`<div class="foodquick"><div><b>${x[0]}</b><small>${x[1]} g / 回</small></div><button class="minus" data-minus="${x[0]}">−</button><button data-plus="${x[0]}" data-g="${x[1]}">＋</button></div>`).join('');
-  $$('[data-plus]').forEach(b=>b.onclick=()=>addP(d,b.dataset.plus,+b.dataset.g));
+  let d=$('#fDate').value||ymd(),n=nutritionTotals(d),g=+D.set.goal;
+  $('#calTotal').textContent=numberText(n.kcal)+' kcal';
+  $('#calGoal').textContent=goalText(D.set.kcalGoal,'kcal');
+  $('#pTotal').textContent=numberText(n.protein)+' g';
+  $('#pRemain').textContent=g?(n.protein>=g?'目標達成 +'+numberText(n.protein-g)+' g':'あと '+numberText(g-n.protein)+' g'):'目標未設定';
+  $('#fatTotal').textContent=numberText(n.fat)+' g';
+  $('#fatGoal').textContent=goalText(D.set.fatGoal,'g');
+  $('#carbTotal').textContent=numberText(n.carbs)+' g';
+  $('#carbGoal').textContent=goalText(D.set.carbGoal,'g');
+  $('#fiberTotal').textContent=numberText(n.fiber)+' g';
+  $('#fiberGoal').textContent=goalText(D.set.fiberGoal,'g');
+  $('#pBar').style.width=g?Math.min(100,n.protein/g*100)+'%':'0%';
+  $('#quick').innerHTML=FOODS.map((x,i)=>`<div class="foodquick"><div><b>${x.n}</b><small>${x.serving} ・ ${x.kcal}kcal / P${numberText(x.p)} F${numberText(x.f)} C${numberText(x.c)}</small></div><button class="minus" data-minus="${x.n}" aria-label="${x.n}を取り消す">−</button><button data-food-index="${i}" aria-label="${x.n}を追加">＋</button></div>`).join('');
+  $$('[data-food-index]').forEach(b=>b.onclick=()=>addFood(d,FOODS[+b.dataset.foodIndex]));
   $$('[data-minus]').forEach(b=>b.onclick=()=>removeLatestP(d,b.dataset.minus));
   let m=D.meal[d]|| {
   },mealFoods=m.foods|| {
@@ -410,17 +475,17 @@ function renderFood() {
     save()
   });
   let h=D.protein[d]||[];
-  $('#pHistory').innerHTML=h.length?h.map(x=>`<div class="item"><div><b>${x.n}</b><small>+${x.g} g</small></div><button class="btn danger" data-dp="${x.id}">削除</button></div>`).join(''):'<span class="muted">まだ追加なし</span>';
+  $('#pHistory').innerHTML=h.length?h.map(x=>`<div class="item"><div><b>${x.n}</b><small>${nutritionText(x)}</small></div><button class="btn danger" data-dp="${x.id}">削除</button></div>`).join(''):'<span class="muted">まだ追加なし</span>';
   $$('[data-dp]').forEach(b=>b.onclick=()=> {
     D.protein[d]=D.protein[d].filter(x=>x.id!==b.dataset.dp); save()
   })
 }
 $('#fDate').onchange=renderFood;
 $('#addP').onclick=()=> {
-  let n=$('#cName').value.trim(),g=+$('#cGram').value;
-  if(!n||!g)return alert('食品名とgを入力してください．');
-  addP($('#fDate').value,n,g);
-  $('#cName').value=$('#cGram').value=''
+  let name=$('#cName').value.trim(),fields=['#cKcal','#cGram','#cFat','#cCarbs','#cFiber'];
+  if(!name||!fields.some(x=>$(x).value!==''))return alert('食品名と栄養値を1つ以上入力してください．');
+  addFood($('#fDate').value,{n:name,kcal:$('#cKcal').value,p:$('#cGram').value,f:$('#cFat').value,c:$('#cCarbs').value,fiber:$('#cFiber').value});
+  ['#cName',...fields].forEach(x=>$(x).value='')
 };
 function renderCal() {
   let y=CUR.getFullYear(),m=CUR.getMonth();
@@ -444,6 +509,10 @@ $('#nextM').onclick=()=> {
 };
 $('#saveSet').onclick=()=> {
   D.set.goal=+$('#setGoal').value||110;
+  D.set.kcalGoal=$('#setKcalGoal').value===''?0:Math.max(0,+$('#setKcalGoal').value||0);
+  D.set.fatGoal=$('#setFatGoal').value===''?0:Math.max(0,+$('#setFatGoal').value||0);
+  D.set.carbGoal=$('#setCarbGoal').value===''?0:Math.max(0,+$('#setCarbGoal').value||0);
+  D.set.fiberGoal=$('#setFiberGoal').value===''?0:Math.max(0,+$('#setFiberGoal').value||0);
   D.set.height=+$('#setHeight').value||167.2;
   D.set.bodyTiming=$('#setBodyTiming').value||'prebath';
   D.set.name=$('#setName').value.trim();
@@ -487,6 +556,10 @@ function renderAll() {
     if(!$(x).value)$(x).value=ymd()
   });
   $('#setGoal').value=D.set.goal;
+  $('#setKcalGoal').value=D.set.kcalGoal||'';
+  $('#setFatGoal').value=D.set.fatGoal||'';
+  $('#setCarbGoal').value=D.set.carbGoal||'';
+  $('#setFiberGoal').value=D.set.fiberGoal||'';
   $('#setName').value=D.set.name||'';
   $('#setHeight').value=D.set.height||167.2;
   $('#setBodyTiming').value=D.set.bodyTiming||'prebath';

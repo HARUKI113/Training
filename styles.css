@@ -320,7 +320,9 @@ input,select {
 .foodquick small {
   display:block;
   color:var(--muted);
-  margin-top:2px
+  margin-top:2px;
+  line-height:1.4;
+  overflow-wrap:anywhere
 }
 .foodquick button {
   width:34px;
@@ -583,6 +585,31 @@ th {
   width: auto;
   margin: 0;
 }
+.macro-summary {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:12px
+}
+.macro-stat {
+  min-width:0;
+  padding:11px;
+  background:var(--bg);
+  border-radius:13px
+}
+.macro-stat strong {
+  display:block;
+  font-size:20px;
+  margin-top:5px;
+  overflow-wrap:anywhere
+}
+.macro-stat small {
+  display:block;
+  color:var(--muted);
+  margin-top:5px;
+  line-height:1.4;
+  overflow-wrap:anywhere
+}
 .protein-total {
   font-size: 38px;
 }
@@ -601,6 +628,12 @@ th {
 .exercise-plan,
 .calendar-day-number {
   font-size: 11px;
+}
+
+@media (min-width: 760px) {
+  .macro-summary {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 /* Keep long Japanese labels and form controls inside their grid cells. */
@@ -720,6 +753,16 @@ th {
     min-width: 0;
   }
 
+  .body-form-grid input[type="date"],
+  .run-form-grid input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -730,6 +773,10 @@ th {
 
   .card {
     padding: 15px;
+  }
+
+  .custom-food-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .body-form-grid,
