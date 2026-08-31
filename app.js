@@ -158,14 +158,41 @@ function showToast(msg,undo) {
   clearTimeout(showToast.timer);
   showToast.timer=setTimeout(()=>t.classList.remove('show'),3000)
 }
+function chartRange(values,padding) {
+  let min=Math.min(...values),max=Math.max(...values),span=max-min,pad=Math.max(padding,span*.12);
+  if(!span)pad=Math.max(padding,Math.abs(max)*.03||1);
+  return {min:min-pad,max:max+pad}
+}
+function chartPath(points) {
+  let open=false;
+  return points.map(point=> {
+    if(!point) {
+      open=false;
+      return ''
+    }
+    let command=open?'L':'M';
+    open=true;
+    return command+point[0]+' '+point[1]
+  }).join(' ')
+}
+function chartSeries(points,color) {
+  if(!points.some(Boolean))return '';
+  let path=chartPath(points),circles=points.filter(Boolean).map(point=>`<circle cx="${point[0]}" cy="${point[1]}" r="4" fill="var(--card)" stroke="${color}" stroke-width="3"/>`).join('');
+  return `<path d="${path}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${circles}`
+}
 function chart(el) {
-  let a=[...bodyFiltered()].filter(x=>x.w).sort((a,b)=>a.d.localeCompare(b.d)).slice(-21);
+  let a=[...bodyFiltered()].filter(x=>hasNumber(x.w)).sort((a,b)=>a.d.localeCompare(b.d)).slice(-21);
   if(a.length<2) {
-    el.innerHTML='2件以上記録すると表示';
+    el.classList.remove('has-data');
+    el.innerHTML='体重を2件以上記録すると表示';
     return
   }
-  let V=a.map(x=>+x.w),mi=Math.min(...V)-.4,ma=Math.max(...V)+.4,W=760,H=210,p=24,pts=a.map((x,i)=>[p+(W-p*2)*i/(a.length-1),H-p-(H-p*2)*(x.w-mi)/(ma-mi)]),path=pts.map((q,i)=>(i?'L':'M')+q[0]+' '+q[1]).join(' ');
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}"><path d="${path}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="var(--card)" stroke="var(--blue)" stroke-width="3"/>`).join('')}<text x="5" y="18" fill="currentColor" opacity=".55" font-size="11">${ma.toFixed(1)}kg</text><text x="5" y="${H-6}" fill="currentColor" opacity=".55" font-size="11">${mi.toFixed(1)}kg</text></svg>`
+  el.classList.add('has-data');
+  let W=760,H=228,p=34,plotH=H-p*2,xAt=i=>p+(W-p*2)*i/(a.length-1),weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right=hasFat?chartRange(fats,.8):{min:0,max:100},y=(value,range)=>H-p-(H-p*2)*(value-range.min)/(range.max-range.min),weightPoints=a.map((x,i)=>[xAt(i),y(+x.w,left)]),musclePoints=a.map((x,i)=>hasNumber(x.m)?[xAt(i),y(+x.m,left)]:null),fatPoints=a.map((x,i)=>hasNumber(x.f)?[xAt(i),y(+x.f,right)]:null),ticks=[0,.5,1];
+  let grid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${p+plotH*r}" y2="${p+plotH*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join('');
+  let leftLabels=ticks.map(r=>`<text x="5" y="${p+plotH*r+4}" fill="var(--blue)" opacity=".8" font-size="11">${numberText(left.max-(left.max-left.min)*r)}kg</text>`).join('');
+  let rightLabels=hasFat?ticks.map(r=>`<text x="${W-5}" y="${p+plotH*r+4}" text-anchor="end" fill="var(--orange)" opacity=".9" font-size="11">${numberText(right.max-(right.max-right.min)*r)}%</text>`).join(''):`<text x="${W-5}" y="${p+4}" text-anchor="end" fill="var(--orange)" opacity=".8" font-size="11">体脂肪率 —</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="体重、筋肉量、体脂肪率の推移"><title>体重、筋肉量、体脂肪率の推移</title>${grid}${chartSeries(weightPoints,'var(--blue)')}${chartSeries(musclePoints,'var(--green)')}${chartSeries(fatPoints,'var(--orange)')}${leftLabels}${rightLabels}</svg><div class="chart-legend"><span class="chart-key"><i class="weight"></i>体重（kg）</span><span class="chart-key"><i class="muscle"></i>筋肉量（kg）</span><span class="chart-key"><i class="fat"></i>体脂肪率（%）</span></div>`
 }
 function renderHome() {
   let t=ymd(),p=PLAN[new Date().getDay()],n=new Date();
