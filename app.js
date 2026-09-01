@@ -286,13 +286,13 @@ function runChart(el) {
     return
   }
   el.classList.add('has-data');
-  let firstDate=parse(a[0].d),lastDate=parse(today),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(1,spanDays+1),startDate=new Date(firstDate),viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,dayWidth=(viewportWidth-p*2)/6,baseWidth=p*2+(dayCount-1)*dayWidth,W=Math.max(viewportWidth,baseWidth),H=290,top=30,bottom=220,maxKm=Math.max(1,Math.ceil(Math.max(...a.map(x=>x.km)))),xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,y=value=>bottom-(bottom-top)*value/maxKm,ticks=[0,.5,1];
-  let grid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${y(maxKm*r)}" y2="${y(maxKm*r)}" stroke="var(--line)" stroke-width="1" opacity=".6"/>`).join('');
+  let firstDate=parse(a[0].d),lastDate=parse(today),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(1,spanDays+1),startDate=new Date(firstDate),viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,dayWidth=(viewportWidth-p*2)/6,baseWidth=p*2+(dayCount-1)*dayWidth,W=Math.max(viewportWidth,baseWidth),H=290,top=30,bottom=220,maxKm=Math.max(1,Math.ceil(Math.max(...a.map(x=>x.km)))),xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,y=value=>bottom-(bottom-top)*value/maxKm,axisY=[top,(top+bottom)/2,bottom],axisValues=[maxKm,maxKm/2,0];
+  let grid=axisY.map(position=>`<line x1="${p}" x2="${W-p}" y1="${position}" y2="${position}" stroke="var(--line)" stroke-width="1" opacity=".6"/>`).join('');
   let bars=a.map(x=> {
     let value=Number(x.km),barWidth=Math.min(38,dayWidth*.56),barHeight=bottom-y(value),barX=xAtDate(x.d)-barWidth/2,barY=y(value);
     return `<rect x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="6" fill="var(--green)" opacity=".9"><title>${x.d}：${numberText(value)} km</title></rect>`
   }).join('');
-  let leftLabels=ticks.map(r=>`<span class="chart-axis-label" style="top:${y(maxKm*r)}px">${numberText(maxKm*(1-r))}km</span>`).join('');
+  let leftLabels=axisValues.map((value,index)=>`<span class="chart-axis-label" style="top:${axisY[index]}px">${numberText(value)}km</span>`).join('');
   let dateLabels=Array.from({length:dayCount},(_,i)=> {
     let date=new Date(startDate);
     date.setDate(date.getDate()+i);
