@@ -1,9 +1,9 @@
 const K="training-dashboard-v2";
 const PLAN= {
   1: {
-    n:"BACK + BICEPS",s:"背中・二頭筋・腹部（ダンベル可）",t:"w",e:[["ラットプルダウン","3 × 8〜12"],["ダンベル・ワンハンドロウ（自宅可）","3 × 8〜12 / 左右"],["ダンベル・リアレイズ","2 × 12〜15"],["アーム・カール","3 × 10〜15"],["アブドミナル（自宅はクランチ）","2 × 10〜15"]]
+    n:"BACK + CORE",s:"背中・腹部（ダンベル・自宅可）",t:"w",e:[["ラットプルダウン","3 × 8〜12"],["ダンベル・ワンハンドロウ（自宅可）","3 × 8〜12 / 左右"],["ダンベル・リアレイズ","2 × 12〜15"],["アブドミナル（自宅はクランチ）","2 × 10〜15"]]
   },2: {
-    n:"CHEST + SHOULDERS",s:"胸・肩・三頭筋（自宅はプッシュアップ可）",t:"w",e:[["チェストプレス（自宅はプッシュアップ）","3 × 8〜12"],["ショルダープレス","3 × 8〜12"],["ダンベル・サイドレイズ","2 × 12〜15"],["アーム・エクステンション","3 × 10〜15"]]
+    n:"CHEST + ARMS",s:"胸・肩・腕（自宅はプッシュアップ可）",t:"w",e:[["チェストプレス（自宅はプッシュアップ）","3 × 8〜12"],["ショルダープレス","3 × 8〜12"],["ダンベル・サイドレイズ","2 × 12〜15"],["アーム・カール","3 × 10〜15"],["アーム・エクステンション","3 × 10〜15"]]
   },3: {
     n:"EASY CARDIO",s:"ランニングマシン30〜40分（疲労時は自転車20〜30分）",t:"r",e:[]
   },4: {
@@ -11,7 +11,7 @@ const PLAN= {
   },5: {
     n:"REST",s:"休養（疲労が強ければ完全休養）",t:"x",e:[]
   },6: {
-    n:"ARMS + SHOULDERS",s:"腕・肩・腹部（自宅はクランチ可）",t:"w",e:[["ショルダープレス","3 × 8〜12"],["アーム・カール","3 × 10〜15"],["アーム・エクステンション","3 × 10〜15"],["ダンベル・サイドレイズ","2 × 12〜15"],["アブドミナル（自宅はクランチ）","3 × 10〜15"]]
+    n:"SHOULDERS + CORE",s:"肩・腹部（自宅は自重可）",t:"w",e:[["ショルダープレス","3 × 8〜12"],["ダンベル・サイドレイズ","2 × 12〜15"],["アブドミナル（自宅はクランチ）","3 × 10〜15"]]
   },0: {
     n:"EASY RUN",s:"ランニングマシン30〜40分（疲労時は自転車20〜30分）",t:"r",e:[]
   }
@@ -60,7 +60,7 @@ let D=(()=> {
   }
   return blank()
 })();
-let CUR=new Date(),lastProteinAction=null;
+let CUR=new Date(),lastProteinAction=null,editingWorkoutId=null;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const pad=n=>String(n).padStart(2,"0");
 function ymd(d=new Date()) {
@@ -311,6 +311,33 @@ function prevEx(n,d) {
   }
   return null
 }
+function escapeHtml(value) {
+  return String(value??'').replace(/[&<>"']/g,character=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[character]))
+}
+function workoutEditorHtml(entry) {
+  let exercises=Array.isArray(entry.e)?entry.e:[],rows=exercises.map(exercise=> {
+    let reps=Array.isArray(exercise.r)?exercise.r:[],setCount=Math.max(3,reps.length),inputs=Array.from({length:setCount},(_,i)=>`<label>${i+1}set<input data-edit-rep type="number" value="${escapeHtml(reps[i]??'')}"></label>`).join('');
+    return `<div class="wo-edit-exercise" data-edit-exercise data-edit-name="${escapeHtml(exercise.n)}"><b>${escapeHtml(exercise.n)}</b><div class="wo-edit-fields"><label>重量 kg<input data-edit-weight type="number" step=".5" value="${escapeHtml(exercise.k??'')}"></label>${inputs}</div></div>`
+  }).join('');
+  return `<div class="wo-editor" data-wo-editor="${escapeHtml(entry.id)}"><div class="grid wo-edit-meta"><label>日付<input data-edit-date type="date" value="${escapeHtml(entry.d)}"></label><label>運動時間 分<input data-edit-min type="number" min="0" value="${escapeHtml(entry.min??'')}"></label><label>アクティブkcal<input data-edit-kcal type="number" min="0" value="${escapeHtml(entry.kcal??'')}"></label><label>総消費kcal<input data-edit-total-kcal type="number" min="0" value="${escapeHtml(entry.totalKcal??'')}"></label><label>平均心拍 bpm<input data-edit-hr type="number" min="0" value="${escapeHtml(entry.hr??'')}"></label><label>ストレッチ 分<input data-edit-stretch type="number" min="0" value="${escapeHtml(entry.stretch??'')}"></label></div><div class="wo-edit-exercises">${rows||'<span class="muted">種目記録なし</span>'}</div><div class="actions"><button type="button" class="btn primary" data-update-wo="${escapeHtml(entry.id)}">変更</button><button type="button" class="btn secondary" data-cancel-wo="${escapeHtml(entry.id)}">キャンセル</button></div></div>`
+}
+function updateWorkout(id) {
+  let entry=D.wo.find(x=>x.id===id),editor=$$('[data-wo-editor]').find(x=>x.dataset.woEditor===id);
+  if(!entry||!editor)return;
+  let d=editor.querySelector('[data-edit-date]').value,e=[...editor.querySelectorAll('[data-edit-exercise]')].map(row=>({
+    n:row.dataset.editName,k:row.querySelector('[data-edit-weight]').value,r:[...row.querySelectorAll('[data-edit-rep]')].map(input=>input.value)
+  })).filter(x=>x.k||x.r.some(Boolean)),min=editor.querySelector('[data-edit-min]').value,kcal=editor.querySelector('[data-edit-kcal]').value,totalKcal=editor.querySelector('[data-edit-total-kcal]').value,hr=editor.querySelector('[data-edit-hr]').value,stretch=editor.querySelector('[data-edit-stretch]').value;
+  if(!d)return alert('日付を入力してください．');
+  if(!e.length&&!min&&!kcal&&!totalKcal&&!hr&&!stretch)return alert('種目記録，運動時間，Apple Watchの値のどれかを入力してください．');
+  let p=PLAN[parse(d).getDay()],updated=Object.assign({},entry,{d,p:p.n,e,min,kcal,totalKcal,hr,stretch});
+  D.wo=D.wo.filter(x=>x.id!==id&&x.d!==d);
+  D.wo.push(updated);
+  editingWorkoutId=null;
+  save();
+  showToast('筋トレを更新しました．')
+}
 function renderWorkout() {
   const date = $('#wpDate').value || ymd();
   const plan = PLAN[parse(date).getDay()];
@@ -365,20 +392,64 @@ function renderWorkout() {
   $('#woHistory').innerHTML = history.length
     ? history
         .map((entry) => `
-          <div class="item">
-            <div>
-              <b>${entry.p}</b>
-              <small>${entry.d} ・ ${(entry.e || []).length}種目 ・ ${entry.min || '—'}分 ・ ${entry.kcal || '—'}kcal${entry.totalKcal ? ` ・ 合計 ${entry.totalKcal}kcal` : ''}${entry.hr ? ` ・ HR ${entry.hr}` : ''}${entry.stretch ? ` ・ stretch ${entry.stretch}分` : ''}</small>
+          <div class="wo-history-entry">
+            <div class="item wo-history-item" data-wo-history="${entry.id}" role="button" tabindex="0" aria-expanded="${editingWorkoutId===entry.id}">
+              <div>
+                <b>${entry.p}</b>
+                <small>${entry.d} ・ ${(entry.e || []).length}種目 ・ ${entry.min || '—'}分 ・ ${entry.kcal || '—'}kcal${entry.totalKcal ? ` ・ 合計 ${entry.totalKcal}kcal` : ''}${entry.hr ? ` ・ HR ${entry.hr}` : ''}${entry.stretch ? ` ・ stretch ${entry.stretch}分` : ''}</small>
+              </div>
+              <div class="wo-history-actions">
+                <button type="button" class="btn secondary" data-edit-wo="${entry.id}">編集</button>
+                <button type="button" class="btn danger" data-dw="${entry.id}">削除</button>
+              </div>
             </div>
-            <button class="btn danger" data-dw="${entry.id}">削除</button>
+            ${editingWorkoutId===entry.id?workoutEditorHtml(entry):''}
           </div>
         `)
         .join('')
     : '<span class="muted">まだ記録なし</span>';
 
-  $$('[data-dw]').forEach((button) => {
+  $$('[data-wo-history]').forEach((item) => {
+    const openEditor = () => {
+      editingWorkoutId = item.dataset.woHistory;
+      renderWorkout();
+    };
+    item.onclick = (event) => {
+      if (event.target.closest('button')) return;
+      openEditor();
+    };
+    item.onkeydown = (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button')) {
+        event.preventDefault();
+        openEditor();
+      }
+    };
+  });
+
+  $$('[data-edit-wo]').forEach((button) => {
+    button.onclick = (event) => {
+      event.stopPropagation();
+      editingWorkoutId = button.dataset.editWo;
+      renderWorkout();
+    };
+  });
+
+  $$('[data-update-wo]').forEach((button) => {
+    button.onclick = () => updateWorkout(button.dataset.updateWo);
+  });
+
+  $$('[data-cancel-wo]').forEach((button) => {
     button.onclick = () => {
+      editingWorkoutId = null;
+      renderWorkout();
+    };
+  });
+
+  $$('[data-dw]').forEach((button) => {
+    button.onclick = (event) => {
+      event.stopPropagation();
       D.wo = D.wo.filter((entry) => entry.id !== button.dataset.dw);
+      if (editingWorkoutId === button.dataset.dw) editingWorkoutId = null;
       save();
     };
   });

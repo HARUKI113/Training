@@ -231,6 +231,69 @@ input,select {
 .item small {
   overflow-wrap:anywhere
 }
+.wo-history-entry {
+  display:grid;
+  gap:8px
+}
+.wo-history-item {
+  cursor:pointer;
+  transition:border-color .15s,box-shadow .15s
+}
+.wo-history-item:hover,
+.wo-history-item:focus-visible {
+  border-color:var(--blue);
+  box-shadow:0 0 0 2px rgba(37,99,235,.12)
+}
+.wo-history-actions {
+  display:flex;
+  flex:0 0 auto;
+  gap:6px
+}
+.wo-history-actions .btn {
+  padding:8px 10px;
+  font-size:12px
+}
+.wo-editor {
+  padding:12px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:14px
+}
+.wo-edit-meta {
+  margin-bottom:12px
+}
+.wo-edit-exercises {
+  display:grid;
+  gap:8px
+}
+.wo-edit-exercise {
+  padding:10px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px
+}
+.wo-edit-exercise > b {
+  display:block;
+  margin-bottom:8px;
+  overflow-wrap:anywhere
+}
+.wo-edit-fields {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px
+}
+.wo-edit-fields label {
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700
+}
+.wo-edit-fields input {
+  margin-top:5px;
+  padding:9px
+}
+.wo-editor .actions {
+  margin-top:12px
+}
 .check {
   display:flex;
   justify-content:space-between;
@@ -708,6 +771,9 @@ th {
   }
   .session-meta {
     grid-template-columns:repeat(2,1fr)
+  }
+  .wo-edit-fields {
+    grid-template-columns:repeat(2,minmax(0,1fr))
   }
 }
 *[hidden] {
