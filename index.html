@@ -8,8 +8,8 @@
     <title>
       Training Dashboard
     </title>
-    <link rel="stylesheet" href="styles.css?v=20260901-1">
-    <script src="app.js?v=20260901-1" defer>
+    <link rel="stylesheet" href="styles.css?v=20260901-2">
+    <script src="app.js?v=20260901-2" defer>
     </script>
   </head>
   <body>
@@ -167,6 +167,46 @@
                 ストレッチ 分
                 <input id="wStretch" type="number" min="0">
               </label>
+            </div>
+            <div id="restTimer" class="rest-timer">
+              <div class="rest-timer-head">
+                <div>
+                  <div class="eyebrow">
+                    REST TIMER
+                  </div>
+                  <h3>
+                    セット間の休憩
+                  </h3>
+                </div>
+                <strong id="restTime">
+                  01:30
+                </strong>
+              </div>
+              <div class="rest-presets">
+                <button type="button" class="btn secondary rest-preset" data-rest="60">
+                  60秒
+                </button>
+                <button type="button" class="btn secondary rest-preset" data-rest="90">
+                  90秒
+                </button>
+                <button type="button" class="btn secondary rest-preset" data-rest="120">
+                  120秒
+                </button>
+              </div>
+              <div class="actions rest-actions">
+                <button type="button" id="restStart" class="btn primary">
+                  開始
+                </button>
+                <button type="button" id="restPause" class="btn secondary">
+                  一時停止
+                </button>
+                <button type="button" id="restReset" class="btn secondary">
+                  リセット
+                </button>
+              </div>
+              <small id="restStatus" class="muted">
+                目安：マシン種目は90〜120秒、腕・腹部は60〜90秒
+              </small>
             </div>
             <div id="exList">
             </div>

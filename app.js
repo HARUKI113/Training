@@ -1,17 +1,17 @@
 const K="training-dashboard-v2";
 const PLAN= {
   1: {
-    n:"BACK + BICEPS",s:"背中・二頭筋・腹部",t:"w",e:[["ラットプルダウン","3 × 8〜12"],["ダンベル・ワンハンドロウ","3 × 8〜12 / 左右"],["ダンベル・リアレイズ","2 × 12〜15"],["アーム・カール","3 × 10〜15"],["アブドミナル","2 × 10〜15"]]
+    n:"BACK + BICEPS",s:"背中・二頭筋・腹部（ダンベル可）",t:"w",e:[["ラットプルダウン","3 × 8〜12"],["ダンベル・ワンハンドロウ（自宅可）","3 × 8〜12 / 左右"],["ダンベル・リアレイズ","2 × 12〜15"],["アーム・カール","3 × 10〜15"],["アブドミナル（自宅はクランチ）","2 × 10〜15"]]
   },2: {
-    n:"CHEST + SHOULDERS",s:"胸・肩・三頭筋",t:"w",e:[["チェストプレス","3 × 8〜12"],["ショルダープレス","3 × 8〜12"],["ダンベル・サイドレイズ","2 × 12〜15"],["アーム・エクステンション","3 × 10〜15"]]
+    n:"CHEST + SHOULDERS",s:"胸・肩・三頭筋（自宅はプッシュアップ可）",t:"w",e:[["チェストプレス（自宅はプッシュアップ）","3 × 8〜12"],["ショルダープレス","3 × 8〜12"],["ダンベル・サイドレイズ","2 × 12〜15"],["アーム・エクステンション","3 × 10〜15"]]
   },3: {
     n:"EASY CARDIO",s:"ランニングマシン30〜40分（疲労時は自転車20〜30分）",t:"r",e:[]
   },4: {
-    n:"FULL BODY",s:"脚・背中・胸・腹部（軽め）",t:"w",e:[["ダンベル・ゴブレットスクワット","3 × 8〜12"],["ダンベル・ルーマニアンデッドリフト","3 × 8〜12"],["ラットプルダウン","2 × 10〜12"],["チェストプレス","2 × 10〜12"],["アブドミナル","2 × 10〜15"]]
+    n:"FULL BODY",s:"脚・背中・胸・腹部（自重・ダンベル可）",t:"w",e:[["ゴブレットスクワット（自重可）","3 × 8〜12"],["ダンベル・ルーマニアンデッドリフト","3 × 8〜12"],["ラットプルダウン","2 × 10〜12"],["チェストプレス（自宅はプッシュアップ）","2 × 8〜12"],["アブドミナル（自宅はクランチ）","2 × 10〜15"]]
   },5: {
     n:"REST",s:"休養（疲労が強ければ完全休養）",t:"x",e:[]
   },6: {
-    n:"ARMS + SHOULDERS",s:"腕・肩・腹部",t:"w",e:[["ショルダープレス","3 × 8〜12"],["アーム・カール","3 × 10〜15"],["アーム・エクステンション","3 × 10〜15"],["ダンベル・サイドレイズ","2 × 12〜15"],["アブドミナル","3 × 10〜15"]]
+    n:"ARMS + SHOULDERS",s:"腕・肩・腹部（自宅はクランチ可）",t:"w",e:[["ショルダープレス","3 × 8〜12"],["アーム・カール","3 × 10〜15"],["アーム・エクステンション","3 × 10〜15"],["ダンベル・サイドレイズ","2 × 12〜15"],["アブドミナル（自宅はクランチ）","3 × 10〜15"]]
   },0: {
     n:"EASY RUN",s:"ランニングマシン30〜40分（疲労時は自転車20〜30分）",t:"r",e:[]
   }
@@ -159,6 +159,66 @@ function showToast(msg,undo) {
   };
   clearTimeout(showToast.timer);
   showToast.timer=setTimeout(()=>t.classList.remove('show'),3000)
+}
+let restTimer={duration:90,remaining:90,running:false,endAt:0,interval:null};
+function restRemaining() {
+  return restTimer.running?Math.max(0,Math.ceil((restTimer.endAt-Date.now())/1000)):restTimer.remaining
+}
+function stopRestInterval() {
+  clearInterval(restTimer.interval);
+  restTimer.interval=null
+}
+function renderRestTimer() {
+  let root=$('#restTimer'),time=$('#restTime'),status=$('#restStatus');
+  if(!root||!time)return;
+  let seconds=restRemaining();
+  time.textContent=pad(Math.floor(seconds/60))+':'+pad(seconds%60);
+  root.classList.toggle('is-running',restTimer.running);
+  root.classList.toggle('is-done',!restTimer.running&&seconds===0);
+  if(status)status.textContent=restTimer.running?'休憩中…':seconds===0?'休憩終了。次のセットへ':'目安：マシン種目は90〜120秒、腕・腹部は60〜90秒';
+  $$('.rest-preset').forEach(button=>button.classList.toggle('active',+button.dataset.rest===restTimer.duration))
+}
+function tickRestTimer() {
+  if(!restTimer.running)return;
+  restTimer.remaining=restRemaining();
+  if(restTimer.remaining===0) {
+    restTimer.running=false;
+    stopRestInterval();
+    renderRestTimer();
+    showToast('休憩終了です．');
+    if(navigator.vibrate)navigator.vibrate([180,80,180]);
+    return
+  }
+  renderRestTimer()
+}
+function startRestTimer() {
+  if(restTimer.running)return;
+  if(!restTimer.remaining)restTimer.remaining=restTimer.duration;
+  restTimer.endAt=Date.now()+restTimer.remaining*1000;
+  restTimer.running=true;
+  stopRestInterval();
+  restTimer.interval=setInterval(tickRestTimer,250);
+  renderRestTimer()
+}
+function pauseRestTimer() {
+  if(!restTimer.running)return;
+  restTimer.remaining=restRemaining();
+  restTimer.running=false;
+  stopRestInterval();
+  renderRestTimer()
+}
+function resetRestTimer() {
+  restTimer.running=false;
+  stopRestInterval();
+  restTimer.remaining=restTimer.duration;
+  renderRestTimer()
+}
+function setRestPreset(seconds) {
+  restTimer.running=false;
+  stopRestInterval();
+  restTimer.duration=seconds;
+  restTimer.remaining=seconds;
+  renderRestTimer()
 }
 function chartRange(values,padding) {
   let min=Math.min(...values),max=Math.max(...values),span=max-min,pad=Math.max(padding,span*.12);
@@ -323,6 +383,11 @@ function renderWorkout() {
     };
   });
 }
+$('#restStart').onclick=startRestTimer;
+$('#restPause').onclick=pauseRestTimer;
+$('#restReset').onclick=resetRestTimer;
+$$('.rest-preset').forEach(button=>button.onclick=()=>setRestPreset(+button.dataset.rest));
+renderRestTimer();
 $('#wpDate').onchange=renderWorkout;
 $('#clearWo').onclick=()=> {
   ['#wMin','#wKcal','#wTotalKcal','#wHr','#wStretch'].forEach(x=>$(x).value='');
