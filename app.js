@@ -175,7 +175,7 @@ function renderRestTimer() {
   time.textContent=pad(Math.floor(seconds/60))+':'+pad(seconds%60);
   root.classList.toggle('is-running',restTimer.running);
   root.classList.toggle('is-done',!restTimer.running&&seconds===0);
-  if(status)status.textContent=restTimer.running?'休憩中…':seconds===0?'休憩終了。次のセットへ':'目安：マシン種目は90〜120秒、腕・腹部は60〜90秒';
+  if(status)status.textContent=restTimer.running?'休憩中…':seconds===0?'休憩終了。次のセットへ':'マシン種目は90〜120秒、腕・腹部は60〜90秒';
   $$('.rest-preset').forEach(button=>button.classList.toggle('active',+button.dataset.rest===restTimer.duration))
 }
 function tickRestTimer() {
