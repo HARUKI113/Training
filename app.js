@@ -90,7 +90,8 @@ function go(v) {
     top:0,behavior:'smooth'
   });
   if(v==='home')renderHome();
-  if(v==='body')renderBody()
+  if(v==='body')renderBody();
+  if(v==='run')renderRun()
 }
 $$('[data-go]').forEach(x=>{
   x.onclick=()=>go(x.dataset.go);
@@ -251,21 +252,16 @@ function chartSeries(points,color) {
   return `<path d="${path}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${circles}`
 }
 function chart(el) {
-  let byDate=new Map();
-  [...bodyFiltered()].filter(x=>hasNumber(x.w)).sort((a,b)=>a.d.localeCompare(b.d)).slice(-21).forEach(x=>byDate.set(x.d,x));
+  let byDate=new Map(),today=ymd();
+  [...bodyFiltered()].filter(x=>x.d<=today&&hasNumber(x.w)).sort((a,b)=>a.d.localeCompare(b.d)).forEach(x=>byDate.set(x.d,x));
   let a=[...byDate.values()];
-  if(a.length<2) {
+  if(!a.length) {
     el.classList.remove('has-data');
-    el.innerHTML='体重を2件以上記録すると表示';
+    el.innerHTML='体重を記録すると表示';
     return
   }
   el.classList.add('has-data');
-  let firstDate=parse(a[0].d),lastDate=parse(a[a.length-1].d),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(7,spanDays+1),startDate=new Date(firstDate);
-  if(spanDays<6) {
-    startDate=new Date(lastDate);
-    startDate.setDate(startDate.getDate()-(dayCount-1))
-  }
-  let viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,baseDayWidth=64,baseWidth=p*2+(dayCount-1)*baseDayWidth,W=Math.max(viewportWidth,baseWidth),dayWidth=baseWidth<=viewportWidth?(W-p*2)/(dayCount-1):baseDayWidth,H=290,kgTop=28,kgBottom=151,fatTop=185,fatBottom=231,xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right={min:10,max:13},y=(value,range,top,bottom)=>bottom-(bottom-top)*(value-range.min)/(range.max-range.min),weightPoints=a.map(x=>[xAtDate(x.d),y(+x.w,left,kgTop,kgBottom)]),musclePoints=a.map(x=>hasNumber(x.m)?[xAtDate(x.d),y(+x.m,left,kgTop,kgBottom)]:null),fatPoints=a.map(x=>hasNumber(x.f)?[xAtDate(x.d),y(+x.f,right,fatTop,fatBottom)]:null),ticks=[0,.5,1];
+  let firstDate=parse(a[0].d),lastDate=parse(today),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(1,spanDays+1),startDate=new Date(firstDate),viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,dayWidth=(viewportWidth-p*2)/6,baseWidth=p*2+(dayCount-1)*dayWidth,W=Math.max(viewportWidth,baseWidth),H=290,kgTop=28,kgBottom=151,fatTop=185,fatBottom=231,xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,weights=a.map(x=>+x.w),muscles=a.filter(x=>hasNumber(x.m)).map(x=>+x.m),fats=a.filter(x=>hasNumber(x.f)).map(x=>+x.f),left=chartRange(weights.concat(muscles),.4),hasFat=fats.length>0,right={min:10,max:13},y=(value,range,top,bottom)=>bottom-(bottom-top)*(value-range.min)/(range.max-range.min),weightPoints=a.map(x=>[xAtDate(x.d),y(+x.w,left,kgTop,kgBottom)]),musclePoints=a.map(x=>hasNumber(x.m)?[xAtDate(x.d),y(+x.m,left,kgTop,kgBottom)]:null),fatPoints=a.map(x=>hasNumber(x.f)?[xAtDate(x.d),y(+x.f,right,fatTop,fatBottom)]:null),ticks=[0,.5,1];
   let kgGrid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${kgTop+(kgBottom-kgTop)*r}" y2="${kgTop+(kgBottom-kgTop)*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join('');
   let fatGrid=hasFat?ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${fatTop+(fatBottom-fatTop)*r}" y2="${fatTop+(fatBottom-fatTop)*r}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`).join(''):'';
   let leftLabels=ticks.map(r=>`<span class="chart-axis-label" style="top:${kgTop+(kgBottom-kgTop)*r}px">${numberText(left.max-(left.max-left.min)*r)}kg</span>`).join('');
@@ -281,21 +277,16 @@ function chart(el) {
   requestAnimationFrame(()=>scroller.scrollLeft=scroller.scrollWidth)
 }
 function runChart(el) {
-  let byDate=new Map();
-  [...D.run].filter(x=>hasNumber(x.km)&&Number(x.km)>0).sort((a,b)=>a.d.localeCompare(b.d)).forEach(x=>byDate.set(x.d,(byDate.get(x.d)||0)+Number(x.km)));
-  let a=[...byDate.entries()].slice(-21).map(([d,km])=>({d,km}));
+  let byDate=new Map(),today=ymd();
+  [...D.run].filter(x=>x.d<=today&&hasNumber(x.km)&&Number(x.km)>0).sort((a,b)=>a.d.localeCompare(b.d)).forEach(x=>byDate.set(x.d,(byDate.get(x.d)||0)+Number(x.km)));
+  let a=[...byDate.entries()].map(([d,km])=>({d,km}));
   if(!a.length) {
     el.classList.remove('has-data');
     el.innerHTML='ランニングを記録すると表示';
     return
   }
   el.classList.add('has-data');
-  let firstDate=parse(a[0].d),lastDate=parse(a[a.length-1].d),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(7,spanDays+1),startDate=new Date(firstDate);
-  if(spanDays<6) {
-    startDate=new Date(lastDate);
-    startDate.setDate(startDate.getDate()-(dayCount-1))
-  }
-  let viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,baseDayWidth=64,baseWidth=p*2+(dayCount-1)*baseDayWidth,W=Math.max(viewportWidth,baseWidth),dayWidth=baseWidth<=viewportWidth?(W-p*2)/(dayCount-1):baseDayWidth,H=290,top=30,bottom=220,maxKm=Math.max(1,Math.ceil(Math.max(...a.map(x=>x.km)))),xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,y=value=>bottom-(bottom-top)*value/maxKm,ticks=[0,.5,1];
+  let firstDate=parse(a[0].d),lastDate=parse(today),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(1,spanDays+1),startDate=new Date(firstDate),viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,dayWidth=(viewportWidth-p*2)/6,baseWidth=p*2+(dayCount-1)*dayWidth,W=Math.max(viewportWidth,baseWidth),H=290,top=30,bottom=220,maxKm=Math.max(1,Math.ceil(Math.max(...a.map(x=>x.km)))),xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,y=value=>bottom-(bottom-top)*value/maxKm,ticks=[0,.5,1];
   let grid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${y(maxKm*r)}" y2="${y(maxKm*r)}" stroke="var(--line)" stroke-width="1" opacity=".6"/>`).join('');
   let bars=a.map(x=> {
     let value=Number(x.km),barWidth=Math.min(38,dayWidth*.56),barHeight=bottom-y(value),barX=xAtDate(x.d)-barWidth/2,barY=y(value);
