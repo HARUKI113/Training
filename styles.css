@@ -142,6 +142,23 @@ h3 {
   padding:16px;
   min-height:112px
 }
+.stat-link {
+  cursor:pointer;
+  text-align:left;
+  transition:border-color .15s,box-shadow .15s,transform .15s
+}
+.stat-link:hover,
+.stat-link:focus-visible {
+  border-color:var(--blue);
+  box-shadow:0 0 0 2px rgba(37,99,235,.12)
+}
+.stat-link:focus-visible {
+  outline:2px solid var(--blue);
+  outline-offset:2px
+}
+.stat-link:active {
+  transform:translateY(1px)
+}
 .label {
   font-size:11px;
   color:var(--muted);
@@ -596,6 +613,9 @@ input,select {
 }
 .chart-key .fat {
   background:var(--orange)
+}
+.chart-key .run-distance {
+  background:var(--green)
 }
 table {
   width:100%;

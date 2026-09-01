@@ -92,7 +92,15 @@ function go(v) {
   if(v==='home')renderHome();
   if(v==='body')renderBody()
 }
-$$('[data-go]').forEach(x=>x.onclick=()=>go(x.dataset.go));
+$$('[data-go]').forEach(x=>{
+  x.onclick=()=>go(x.dataset.go);
+  if(x.getAttribute('role')==='button')x.onkeydown=e=>{
+    if(e.key==='Enter'||e.key===' ') {
+      e.preventDefault();
+      go(x.dataset.go)
+    }
+  }
+});
 $('#theme').onclick=()=> {
   D.set.theme=document.documentElement.classList.contains('dark')?'light':'dark';
   save()
@@ -272,6 +280,38 @@ function chart(el) {
   let scroller=el.querySelector('.chart-scroll');
   requestAnimationFrame(()=>scroller.scrollLeft=scroller.scrollWidth)
 }
+function runChart(el) {
+  let byDate=new Map();
+  [...D.run].filter(x=>hasNumber(x.km)&&Number(x.km)>0).sort((a,b)=>a.d.localeCompare(b.d)).forEach(x=>byDate.set(x.d,(byDate.get(x.d)||0)+Number(x.km)));
+  let a=[...byDate.entries()].slice(-21).map(([d,km])=>({d,km}));
+  if(!a.length) {
+    el.classList.remove('has-data');
+    el.innerHTML='ランニングを記録すると表示';
+    return
+  }
+  el.classList.add('has-data');
+  let firstDate=parse(a[0].d),lastDate=parse(a[a.length-1].d),spanDays=Math.round((lastDate-firstDate)/86400000),dayCount=Math.max(7,spanDays+1),startDate=new Date(firstDate);
+  if(spanDays<6) {
+    startDate=new Date(lastDate);
+    startDate.setDate(startDate.getDate()-(dayCount-1))
+  }
+  let viewportWidth=Math.max(280,Math.round(el.clientWidth||393)),p=34,baseDayWidth=64,baseWidth=p*2+(dayCount-1)*baseDayWidth,W=Math.max(viewportWidth,baseWidth),dayWidth=baseWidth<=viewportWidth?(W-p*2)/(dayCount-1):baseDayWidth,H=290,top=30,bottom=220,maxKm=Math.max(1,Math.ceil(Math.max(...a.map(x=>x.km)))),xAtDate=date=>p+Math.round((parse(date)-startDate)/86400000)*dayWidth,y=value=>bottom-(bottom-top)*value/maxKm,ticks=[0,.5,1];
+  let grid=ticks.map(r=>`<line x1="${p}" x2="${W-p}" y1="${y(maxKm*r)}" y2="${y(maxKm*r)}" stroke="var(--line)" stroke-width="1" opacity=".6"/>`).join('');
+  let bars=a.map(x=> {
+    let value=Number(x.km),barWidth=Math.min(38,dayWidth*.56),barHeight=bottom-y(value),barX=xAtDate(x.d)-barWidth/2,barY=y(value);
+    return `<rect x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="6" fill="var(--green)" opacity=".9"><title>${x.d}：${numberText(value)} km</title></rect>`
+  }).join('');
+  let leftLabels=ticks.map(r=>`<span class="chart-axis-label" style="top:${y(maxKm*r)}px">${numberText(maxKm*(1-r))}km</span>`).join('');
+  let dateLabels=Array.from({length:dayCount},(_,i)=> {
+    let date=new Date(startDate);
+    date.setDate(date.getDate()+i);
+    let label=(date.getMonth()+1)+'/'+date.getDate(),x=p+i*dayWidth;
+    return `<text x="${x}" y="${H-10}" text-anchor="middle" fill="currentColor" opacity=".8" font-size="11">${label}</text>`
+  }).join('');
+  el.innerHTML=`<div class="chart-frame"><div class="chart-scroll"><svg style="width:${W}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="ランニング距離の推移"><title>ランニング距離の推移</title>${grid}${bars}${dateLabels}</svg></div><div class="chart-axis chart-axis-left" aria-hidden="true">${leftLabels}</div></div><div class="chart-legend"><span class="chart-key"><i class="run-distance"></i>距離（km）</span></div>`;
+  let scroller=el.querySelector('.chart-scroll');
+  requestAnimationFrame(()=>scroller.scrollLeft=scroller.scrollWidth)
+}
 function renderHome() {
   let t=ymd(),p=PLAN[new Date().getDay()],n=new Date();
   $('#heroDate').textContent=`${n.getFullYear()} / ${pad(n.getMonth()+1)} / ${pad(n.getDate())}`;
@@ -283,7 +323,7 @@ function renderHome() {
   $('#dWeight').textContent=b?b.w+' kg':'—';
   $('#dWeightS').textContent=b?`${b.d}・${TIMING[b.timing||'prebath']}`:'記録なし';
   let pt=pTotal(t);
-  $('#dProtein').textContent=pt+' g';
+  $('#dProtein').textContent=Number(pt).toFixed(1)+' g';
   $('#dProteinS').textContent='目標 '+D.set.goal+' g';
   let ws=startWeek(),we=new Date(ws);
   we.setDate(we.getDate()+6);
@@ -300,9 +340,6 @@ function renderHome() {
     }; if(c.dataset.day==='tr')D.daily[t].rest=c.checked; if(c.dataset.day==='rc')D.daily[t].recovery=c.checked; localStorage.setItem(K,JSON.stringify(D)); renderHome(); renderCal()
   });
   $('#score').textContent=list.filter(x=>x[2]).length+' / 4';
-  let a=avg(7);
-  $('#avgBadge').textContent='7日平均 '+(a?a.toFixed(1)+' kg':'—');
-  chart($('#homeChart'))
 }
 function prevEx(n,d) {
   for(let w of [...D.wo].filter(x=>x.d<d).sort((a,b)=>b.d.localeCompare(a.d))) {
@@ -546,6 +583,7 @@ function renderRun() {
   const longest = runs.reduce((max, entry) => Math.max(max, entry.km), 0);
   $('#long').textContent = longest ? longest.toFixed(1) : '—';
   $('#wKm').textContent = weekRuns.reduce((sum, entry) => sum + entry.km, 0).toFixed(1) + ' km';
+  runChart($('#runChart'));
 
   $('#runHistory').innerHTML = runs.length
     ? runs
