@@ -277,7 +277,46 @@ input,select {
   border-radius:14px
 }
 .wo-edit-meta {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
   margin-bottom:12px
+}
+.edit-meta-field {
+  position:relative;
+  min-width:0
+}
+.edit-meta-label {
+  display:block;
+  margin-bottom:5px
+}
+.edit-meta-field > input {
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  margin-top:0;
+  padding:9px
+}
+.wo-edit-meta input[type="date"] {
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden
+}
+.unit-input > input {
+  padding-right:38px
+}
+.input-unit {
+  position:absolute;
+  right:9px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
+  pointer-events:none
 }
 .wo-edit-exercises {
   display:grid;
@@ -837,6 +876,9 @@ th {
   }
   .session-meta {
     grid-template-columns:repeat(2,1fr)
+  }
+  .wo-edit-meta {
+    grid-template-columns:repeat(2,minmax(0,1fr))
   }
   .wo-edit-fields {
     grid-template-columns:repeat(2,minmax(0,1fr))

@@ -402,7 +402,39 @@ function workoutEditorHtml(entry) {
     let reps=Array.isArray(exercise.r)?exercise.r:[],setCount=Math.max(3,reps.length),inputs=Array.from({length:setCount},(_,i)=>`<label>${i+1}set<input data-edit-rep type="number" value="${escapeHtml(reps[i]??'')}"></label>`).join('');
     return `<div class="wo-edit-exercise" data-edit-exercise data-edit-name="${escapeHtml(exercise.n)}"><b>${escapeHtml(exercise.n)}</b><div class="wo-edit-fields"><label>重量 kg<input data-edit-weight type="number" step=".5" value="${escapeHtml(exercise.k??'')}"></label>${inputs}</div></div>`
   }).join('');
-  return `<div class="wo-editor" data-wo-editor="${escapeHtml(entry.id)}"><div class="grid wo-edit-meta"><label>日付<input data-edit-date type="date" value="${escapeHtml(entry.d)}"></label><label>運動時間 分<input data-edit-min type="number" min="0" value="${escapeHtml(entry.min??'')}"></label><label>アクティブkcal<input data-edit-kcal type="number" min="0" value="${escapeHtml(entry.kcal??'')}"></label><label>総消費kcal<input data-edit-total-kcal type="number" min="0" value="${escapeHtml(entry.totalKcal??'')}"></label><label>平均心拍 bpm<input data-edit-hr type="number" min="0" value="${escapeHtml(entry.hr??'')}"></label><label>ストレッチ 分<input data-edit-stretch type="number" min="0" value="${escapeHtml(entry.stretch??'')}"></label></div><div class="wo-edit-exercises">${rows||'<span class="muted">種目記録なし</span>'}</div><div class="actions"><button type="button" class="btn primary" data-update-wo="${escapeHtml(entry.id)}">変更</button><button type="button" class="btn secondary" data-cancel-wo="${escapeHtml(entry.id)}">キャンセル</button></div></div>`
+  return `<div class="wo-editor" data-wo-editor="${escapeHtml(entry.id)}">
+    <div class="grid wo-edit-meta">
+      <label class="edit-meta-field edit-date-field">
+        <span class="edit-meta-label">日付</span>
+        <input data-edit-date type="date" value="${escapeHtml(entry.d)}" aria-label="日付">
+      </label>
+      <label class="edit-meta-field unit-input">
+        <input data-edit-min type="number" min="0" value="${escapeHtml(entry.min??'')}" placeholder="運動時間" aria-label="運動時間">
+        <span class="input-unit" aria-hidden="true">分</span>
+      </label>
+      <label class="edit-meta-field unit-input">
+        <input data-edit-kcal type="number" min="0" value="${escapeHtml(entry.kcal??'')}" placeholder="アクティブ" aria-label="アクティブカロリー">
+        <span class="input-unit" aria-hidden="true">kcal</span>
+      </label>
+      <label class="edit-meta-field unit-input">
+        <input data-edit-total-kcal type="number" min="0" value="${escapeHtml(entry.totalKcal??'')}" placeholder="総消費" aria-label="総消費カロリー">
+        <span class="input-unit" aria-hidden="true">kcal</span>
+      </label>
+      <label class="edit-meta-field unit-input">
+        <input data-edit-hr type="number" min="0" value="${escapeHtml(entry.hr??'')}" placeholder="平均心拍" aria-label="平均心拍数">
+        <span class="input-unit" aria-hidden="true">bpm</span>
+      </label>
+      <label class="edit-meta-field unit-input">
+        <input data-edit-stretch type="number" min="0" value="${escapeHtml(entry.stretch??'')}" placeholder="ストレッチ" aria-label="ストレッチ時間">
+        <span class="input-unit" aria-hidden="true">分</span>
+      </label>
+    </div>
+    <div class="wo-edit-exercises">${rows||'<span class="muted">種目記録なし</span>'}</div>
+    <div class="actions">
+      <button type="button" class="btn primary" data-update-wo="${escapeHtml(entry.id)}">変更</button>
+      <button type="button" class="btn secondary" data-cancel-wo="${escapeHtml(entry.id)}">キャンセル</button>
+    </div>
+  </div>`
 }
 function updateWorkout(id) {
   let entry=D.wo.find(x=>x.id===id),editor=$$('[data-wo-editor]').find(x=>x.dataset.woEditor===id);
