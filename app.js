@@ -404,8 +404,7 @@ function workoutEditorHtml(entry) {
   }).join('');
   return `<div class="wo-editor" data-wo-editor="${escapeHtml(entry.id)}">
     <div class="grid wo-edit-meta">
-      <label class="edit-meta-field edit-date-field">
-        <span class="edit-meta-label">日付</span>
+      <label class="edit-meta-field">
         <input data-edit-date type="date" value="${escapeHtml(entry.d)}" aria-label="日付">
       </label>
       <label class="edit-meta-field unit-input">
