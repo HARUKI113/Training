@@ -8,8 +8,8 @@
     <title>
       Training Dashboard
     </title>
-    <link rel="stylesheet" href="styles.css?v=20260902-1">
-    <script src="app.js?v=20260903-1" defer>
+    <link rel="stylesheet" href="styles.css?v=20260903-2">
+    <script src="app.js?v=20260903-2" defer>
     </script>
   </head>
   <body>
@@ -196,6 +196,18 @@
               </small>
             </div>
             <div id="exList">
+            </div>
+            <div class="exercise-picker">
+              <label for="extraExercise">追加する種目（選択）</label>
+              <div class="exercise-picker-row">
+                <select id="extraExercise">
+                  <option value="">追加する種目を選択</option>
+                </select>
+                <button type="button" id="addExercise" class="btn secondary">
+                  追加
+                </button>
+              </div>
+              <small class="muted">この日の筋トレ記録に種目を追加できます．</small>
             </div>
             <div class="actions">
               <button id="saveWo" class="btn primary">

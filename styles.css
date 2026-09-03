@@ -422,6 +422,52 @@ input,select {
   padding:12px;
   margin-bottom:9px
 }
+.ex-top-side {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+  min-width:0
+}
+.exercise-remove {
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--muted);
+  border-radius:8px;
+  padding:5px 8px;
+  font-size:11px;
+  cursor:pointer
+}
+.exercise-picker {
+  margin:12px 0;
+  padding:12px;
+  background:var(--bg);
+  border-radius:14px
+}
+.exercise-picker > label {
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+  margin-bottom:7px
+}
+.exercise-picker-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:end
+}
+.exercise-picker-row select {
+  margin-top:0
+}
+.exercise-picker-row .btn {
+  white-space:nowrap
+}
+.exercise-picker small {
+  display:block;
+  margin-top:8px;
+  line-height:1.5
+}
 .ex-top {
   display:flex;
   justify-content:space-between;

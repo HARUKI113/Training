@@ -16,6 +16,29 @@ const PLAN= {
     n:"EASY RUN",s:"ランニングマシン30〜40分（疲労時は自転車20〜30分）",t:"r",e:[]
   }
 };
+const EXERCISE_OPTIONS=[
+  {g:"マシン",n:"ハイプーリー・フロントプルダウン",p:"3 × 8〜12"},
+  {g:"マシン",n:"ハイプーリー・バックプルダウン",p:"3 × 8〜12"},
+  {g:"マシン",n:"ショルダープレス",p:"3 × 8〜12"},
+  {g:"マシン",n:"チェストプレス",p:"3 × 8〜12"},
+  {g:"マシン",n:"ラットプルダウン",p:"3 × 8〜12"},
+  {g:"マシン",n:"アブドミナル",p:"2 × 10〜15"},
+  {g:"マシン",n:"レッグプレス",p:"3 × 8〜12"},
+  {g:"マシン",n:"レッグエクステンション",p:"2 × 10〜15"},
+  {g:"マシン",n:"アーム・カール",p:"3 × 10〜15"},
+  {g:"マシン",n:"アーム・エクステンション",p:"3 × 10〜15"},
+  {g:"ダンベル",n:"ダンベル・ワンハンドロウ",p:"3 × 8〜12 / 左右"},
+  {g:"ダンベル",n:"ダンベル・ショルダープレス",p:"3 × 8〜12"},
+  {g:"ダンベル",n:"ダンベル・サイドレイズ",p:"2 × 12〜15"},
+  {g:"ダンベル",n:"ダンベル・リアレイズ",p:"2 × 12〜15"},
+  {g:"ダンベル",n:"ダンベル・シュラッグ",p:"2 × 10〜15"},
+  {g:"ダンベル",n:"ダンベル・カール",p:"3 × 10〜15"},
+  {g:"ダンベル",n:"ダンベル・ハンマーカール",p:"3 × 10〜15"},
+  {g:"ダンベル",n:"ダンベル・キックバック",p:"2 × 10〜15"},
+  {g:"ダンベル",n:"ダンベル・ゴブレットスクワット",p:"3 × 8〜12"},
+  {g:"ダンベル",n:"ダンベル・ルーマニアンデッドリフト",p:"3 × 8〜12"},
+  {g:"ダンベル",n:"ダンベル・ブルガリアンスクワット",p:"2 × 8〜12 / 左右"}
+];
 const FOODS=[
   {n:"ごはん",serving:"150g",kcal:234,p:3.8,f:0.5,c:55.7,fiber:2.3},
   {n:"食パン",serving:"6枚切り1枚",kcal:160,p:5.6,f:2.6,c:28.0,fiber:1.4},
@@ -344,6 +367,36 @@ function escapeHtml(value) {
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[character]))
 }
+function exerciseBaseName(name) {
+  return String(name??'').replace(/（[^）]*）/g,'').replace(/[・\s]/g,'').toLowerCase()
+}
+function sameExercise(a,b) {
+  return exerciseBaseName(a)===exerciseBaseName(b)
+}
+function exerciseOption(name) {
+  return EXERCISE_OPTIONS.find(x=>sameExercise(x.n,name))
+}
+function renderExercisePicker() {
+  let select=$('#extraExercise');
+  if(!select)return;
+  let groups=[...new Set(EXERCISE_OPTIONS.map(x=>x.g))];
+  select.innerHTML='<option value="">追加する種目を選択</option>'+groups.map(group=>`<optgroup label="${escapeHtml(group)}">${EXERCISE_OPTIONS.filter(x=>x.g===group).map(x=>`<option value="${escapeHtml(x.n)}">${escapeHtml(x.n)}</option>`).join('')}</optgroup>`).join('')
+}
+function workoutExercises(date,plan) {
+  let list=plan.e.map(x=>({n:x[0],p:x[1],extra:false})),names=list.map(x=>exerciseBaseName(x.n)),saved=[...D.wo].reverse().find(x=>x.d===date);
+  (saved?.e||[]).forEach(x=> {
+    let name=String(x.n??'').trim(),key=exerciseBaseName(name);
+    if(!key||names.includes(key))return;
+    let option=exerciseOption(name);
+    list.push({n:name,p:option?.p||'追加種目・8〜12回を目安',extra:true});
+    names.push(key)
+  });
+  return list
+}
+function exerciseCardHtml(exercise,date,index) {
+  let previous=prevEx(exercise.n,date),previousValue=previous?`${previous.k||'—'}kg / ${(previous.r||[]).filter(Boolean).join(', ')||'—'}`:'前回記録なし',remove=exercise.extra?'<button type="button" class="exercise-remove" data-remove-exercise>削除</button>':'';
+  return `<div class="exercise" data-ex="${index}" data-name="${escapeHtml(exercise.n)}"${exercise.extra?' data-extra="true"':''}><div class="ex-top"><div><b>${escapeHtml(exercise.n)}</b><div class="muted exercise-plan">${escapeHtml(exercise.p)}</div></div><div class="ex-top-side"><div class="prev">前回<br>${escapeHtml(previousValue)}</div>${remove}</div></div><div class="sets"><span>重量 kg</span><input class="ew" type="number" step=".5"><span></span><span></span><span>回数</span><input class="er" type="number" placeholder="1set"><input class="er" type="number" placeholder="2set"><input class="er" type="number" placeholder="3set"></div></div>`
+}
 function workoutEditorHtml(entry) {
   let exercises=Array.isArray(entry.e)?entry.e:[],rows=exercises.map(exercise=> {
     let reps=Array.isArray(exercise.r)?exercise.r:[],setCount=Math.max(3,reps.length),inputs=Array.from({length:setCount},(_,i)=>`<label>${i+1}set<input data-edit-rep type="number" value="${escapeHtml(reps[i]??'')}"></label>`).join('');
@@ -380,37 +433,17 @@ function renderWorkout() {
     ? 'この日はランニング日です．距離・時間・Apple Watchの値は <b>RUNNING</b> タブで記録します．ストレッチもRUNNING側で記録できます．'
     : 'この日は休養日です．筋トレ記録は不要です．';
 
+  renderExercisePicker();
   if (isWorkout) {
-    $('#exList').innerHTML = plan.e
-      .map((exercise, index) => {
-        const previous = prevEx(exercise[0], date);
-        const previousValue = previous
-          ? `${previous.k || '—'}kg / ${(previous.r || []).filter(Boolean).join(', ') || '—'}`
-          : '前回記録なし';
-
-        return `
-          <div class="exercise" data-ex="${index}" data-name="${exercise[0]}">
-            <div class="ex-top">
-              <div>
-                <b>${exercise[0]}</b>
-                <div class="muted exercise-plan">${exercise[1]}</div>
-              </div>
-              <div class="prev">前回<br>${previousValue}</div>
-            </div>
-            <div class="sets">
-              <span>重量 kg</span>
-              <input class="ew" type="number" step=".5">
-              <span></span>
-              <span></span>
-              <span>回数</span>
-              <input class="er" type="number" placeholder="1set">
-              <input class="er" type="number" placeholder="2set">
-              <input class="er" type="number" placeholder="3set">
-            </div>
-          </div>
-        `;
-      })
+    const exercises = workoutExercises(date, plan);
+    $('#exList').innerHTML = exercises
+      .map((exercise, index) => exerciseCardHtml(exercise, date, index))
       .join('');
+    $$('[data-remove-exercise]').forEach((button) => {
+      button.onclick = () => button.closest('.exercise').remove();
+    });
+  } else {
+    $('#exList').innerHTML = '';
   }
 
   const history = [...D.wo]
@@ -488,6 +521,19 @@ $('#restReset').onclick=resetRestTimer;
 $$('.rest-preset').forEach(button=>button.onclick=()=>setRestPreset(+button.dataset.rest));
 renderRestTimer();
 $('#wpDate').onchange=renderWorkout;
+$('#addExercise').onclick=()=> {
+  let select=$('#extraExercise'),name=select.value,d=$('#wpDate').value||ymd(),plan=PLAN[parse(d).getDay()];
+  if(!name)return showToast('追加する種目を選択してください．');
+  if(plan.t!=='w')return;
+  if($$('.exercise').some(card=>sameExercise(card.dataset.name,name)))return showToast(`${name}は既に追加されています．`);
+  let option=exerciseOption(name),template=document.createElement('template');
+  template.innerHTML=exerciseCardHtml({n:name,p:option?.p||'追加種目・8〜12回を目安',extra:true},d,$$('.exercise').length);
+  let card=template.content.firstElementChild;
+  $('#exList').append(card);
+  card.querySelector('[data-remove-exercise]').onclick=()=>card.remove();
+  select.value='';
+  showToast(`${name}を追加しました．`)
+};
 $('#clearWo').onclick=()=> {
   ['#wMin','#wKcal','#wTotalKcal','#wHr','#wStretch'].forEach(x=>$(x).value='');
   renderWorkout()
